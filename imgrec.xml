@@ -1,0 +1,928 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2022.1 (Build 209U)" ts="2023-05-12 13:43:49">
+<Project name="EnsExportProduction_2023-05-12 13-42-49_515+8" LastModified="2023-05-12 13:43:49.7951339">
+  <ProjectDescription>Studio Project generated from Production 'IMGREC.PRImageRecognition' at 2023-05-12 05:42:49.515 UTC</ProjectDescription>
+  <Items>
+    <ProjectItem name="IMGREC.BOAddPersonImage" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.BOFLogPut" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.BPImageDetection" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.BPRouterRoutingRule" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.DTMSGPersonImage" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.MSGResponse" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.PRImageRecognition" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.RMPersonImage" type="CLS"></ProjectItem>
+    <ProjectItem name="IMGREC.RMPersonImage.Record" type="CLS"></ProjectItem>
+    <ProjectItem name="EnsExportNotes.EnsExportProduction_2023-05-12 13-42-49_515+8.PTD" type="PTD"></ProjectItem>
+  </Items>
+</Project>
+
+
+<Class name="IMGREC.BOAddPersonImage">
+<Description>
+Handles event 1: received a PersonImage request message, copies file to image directory and adds person name to database.</Description>
+<Super>Ens.BusinessOperation</Super>
+<TimeChanged>66374,68140.3780836</TimeChanged>
+<TimeCreated>66297,63356.2325522</TimeCreated>
+
+<Parameter name="ADAPTER">
+<Default>EnsLib.File.OutboundAdapter</Default>
+</Parameter>
+
+<Property name="Adapter">
+<Type>EnsLib.File.OutboundAdapter</Type>
+</Property>
+
+<Parameter name="INVOCATION">
+<Default>Queue</Default>
+</Parameter>
+
+<Property name="pLogger">
+<Type>%String</Type>
+</Property>
+
+<UDLText name="T">
+<Content><![CDATA[
+// TODO figure out how to expose this in GUI properties
+
+]]></Content>
+</UDLText>
+
+<UDLText name="T">
+<Content><![CDATA[
+// trying OnNew below, signature as per the Refactoring menu
+
+]]></Content>
+</UDLText>
+
+<Method name="%OnNew">
+<Description>
+initialize Business Host object</Description>
+<FormalSpec>pConfigName:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set ..pLogger = "IMGREC.BOFLogPut"
+	Quit $method($this,"initConfig",.pConfigName) ; call subclass
+]]></Implementation>
+</Method>
+
+<Method name="trace">
+<FormalSpec>msg:%String</FormalSpec>
+<Implementation><![CDATA[	$$$TRACE(msg)
+]]></Implementation>
+</Method>
+
+<Method name="ComputeAndInsert">
+<Description>
+TODO
+if this fails, make it return something</Description>
+<FormalSpec>imagePath:%String,personName:%String</FormalSpec>
+<Language>python</Language>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	import face_recognition
+	import glob
+	import os
+	import iris
+	import numpy
+	
+	# self.trace("Compute " + imagePath + " " + personName)
+	
+	try:
+		unknown_image = face_recognition.load_image_file(imagePath)
+		ue = face_recognition.face_encodings(unknown_image)
+		if(len(ue) == 0):
+			return "No person detected in image"
+		unknown_encoding = ue[0]
+		s = unknown_encoding.tostring()
+	
+		stmt = iris.sql.prepare("INSERT INTO IMGREC.CLSMainData(STRPersonName, STRImageID, STRPTRImagePath) VALUES(?,?,?)")
+		insert = s.hex()
+		rs = stmt.execute(personName, insert, imagePath)
+		return "{person:s} added to {path:s}".format(person=personName, path=imagePath)
+	except Exception as e:
+		return "Error inserting file: " + str(e)
+]]></Implementation>
+</Method>
+
+<Method name="AddPerson">
+<FormalSpec>pRequest:IMGREC.RMPersonImage.Record,*pResponse:IMGREC.MSGResponse</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+		
+	#dim PersonName as %String
+	#dim ArchivedImageName as %String 
+	#dim ImagePath as %String
+	#dim PtrImage as %Stream.FileBinary
+	#dim tSC as %Status
+	#dim NameExists as %Integer
+	#dim ClassInsert as IMGREC.CLSMainData
+	#dim Response as %String 
+	#dim MsgResponse as MSGResponse
+	
+	set tSC = $$$OK
+	
+	set NameExists = 0
+	set PersonName = pRequest.STRPersonName
+	set ImagePath = pRequest.STRImagePath
+	
+	//Check that image file exists
+	if '##class(%File).Exists(ImagePath)
+	{
+		set Response = ImagePath _ " does not exist."
+	}
+	else 
+	{	
+		// Check if name already exists
+		// Bad style here, logic in operation
+		// Also, this has to be modified if multiple images exist for that person
+		&sql(SELECT COUNT(*) INTO :NameExists FROM IMGREC.CLSMainData WHERE STRPersonName = :PersonName)
+	
+		if NameExists > 0 
+		{
+			set Response = PersonName _ " already exists"
+		}
+		else 
+		{		
+			// Copy file
+			set ArchivedImageName = $REPLACE(PersonName, " ", "_")
+			set PtrImage = ##class(%Stream.FileBinary).%New()
+  			set tSC = PtrImage.LinkToFile(ImagePath)
+  			if $$$ISOK(tSC)
+  			{ 
+  				if ##class(%File).Exists(ArchivedImageName _ ".jpg")
+  				{
+  					set Response = ArchivedImageName _ " already exists"
+  				}
+  				else 
+  				{		
+	  				set tSC = ..Adapter.PutStream(ArchivedImageName _ ".jpg", PtrImage)
+					// set ClassInsert = ##class(IMGREC.CLSMainData).%New()
+					// set ClassInsert.STRPersonName = PersonName	
+					// set ClassInsert.STRPTRImagePath = ArchivedImageName 	
+					// set tSC = ClassInsert.%Save()
+					
+					set Response = ..ComputeAndInsert(ImagePath, PersonName)
+					// this computes image details only after copy of file			
+					//set Response = PersonName _ " added and archived as " _ ArchivedImageName _ ".jpg"
+  				}
+				do ##class(%File).Delete(ImagePath)
+  			} 
+  			else 
+  			{
+	  			set Response = "File open failed " _ ArchivedImageName
+  			}
+		}
+	}
+		
+	set MsgResponse = ##class(MSGResponse).%New()
+	set MsgResponse.STRResponse = Response
+	set tSC = ..SendRequestAsync(..pLogger, MsgResponse, "Logging")
+	
+	quit tSC
+]]></Implementation>
+</Method>
+
+<XData name="MessageMap">
+<Data><![CDATA[
+<MapItems>
+	<MapItem MessageType="IMGREC.RMPersonImage.Record"> 
+		<Method>AddPerson</Method>
+	</MapItem>
+</MapItems>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="IMGREC.BOFLogPut">
+<Description>
+Writes to the log</Description>
+<Super>Ens.BusinessOperation</Super>
+<TimeChanged>66312,38297.1341357</TimeChanged>
+<TimeCreated>66299,43838.0656051</TimeCreated>
+
+<Parameter name="ADAPTER">
+<Default>EnsLib.File.OutboundAdapter</Default>
+</Parameter>
+
+<Property name="Adapter">
+<Type>EnsLib.File.OutboundAdapter</Type>
+</Property>
+
+<Parameter name="INVOCATION">
+<Default>Queue</Default>
+</Parameter>
+
+<Property name="LogPath">
+<Type>%String</Type>
+<InitialExpression>"Log.txt"</InitialExpression>
+</Property>
+
+<Method name="WriteLog">
+<FormalSpec>pRequest:IMGREC.MSGResponse,*pResponse:Ens.Response</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	#dim tSC as %Status
+	set tSC = $$$OK
+	
+	do ..Adapter.PutLine(..LogPath, ##class(%Library.UTC).NowLocal() _ " " _ pRequest.STRResponse)
+	return tSC // TODO ?
+	// quit tSC
+]]></Implementation>
+</Method>
+
+<XData name="MessageMap">
+<Data><![CDATA[
+<MapItems>
+	<MapItem MessageType="IMGREC.MSGResponse"> 
+		<Method>WriteLog</Method>
+	</MapItem>
+</MapItems>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="IMGREC.BPImageDetection">
+<ClassType>persistent</ClassType>
+<Super>Ens.BusinessProcess</Super>
+<TimeChanged>66487,60037.1298438</TimeChanged>
+<TimeCreated>66299,45007.0400741</TimeCreated>
+
+<Property name="pLogger">
+<Type>%String</Type>
+<InitialExpression>"IMGREC.BOFLogPut"</InitialExpression>
+</Property>
+
+<Property name="KnownImageDir">
+<Type>%String</Type>
+<InitialExpression>"C:/Users/petrescu/Documents/Dev/IMGDemo/ImgStoreMain"</InitialExpression>
+<Parameter name="MAXLEN" value="400"/>
+</Property>
+
+<Property name="UnknownImageDir">
+<Type>%String</Type>
+<InitialExpression>"C:/Users/petrescu/Documents/Dev/IMGDemo/ImgStoreUnknown"</InitialExpression>
+<Parameter name="MAXLEN" value="400"/>
+</Property>
+
+<Method name="OnRequest">
+<FormalSpec>pRequest:IMGREC.RMPersonImage.Record,*pResponse:Ens.Response</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	#dim Response as %String
+	#dim MsgResponse as IMGREC.MSGResponse
+	#dim tSC as %Status
+	#dim FileName as %String
+	#dim FilePath as %String
+	#dim FilePathName as %String
+	#dim fSep as %String
+	#dim x as %Exception.General
+	
+	set FilePathName = pRequest.STRImagePath
+	set MsgResponse = ##class(IMGREC.MSGResponse).%New()
+	
+	if '##class(%File).Exists(FilePathName) 
+	{
+		set MsgResponse.STRResponse = FilePathName _ " does not exist"
+		set tSC = ..SendRequestAsync(..pLogger, MsgResponse, "Logging")
+		return tSC
+	}
+	
+	if $Find(FilePathName, "/") > 0 
+	{ set fSep = "/" }
+	else 
+	{ set fSep = "\" }
+	// who,C:\Users\petrescu\Documents\me.jpg works
+	
+	set FileName = $Extract(FilePathName, $Length(FilePathName) - 
+			$Find($Reverse(FilePathName), fSep) + 3, 
+			$Length(FilePathName))
+			
+	set FilePath = $Extract(FilePathName, 1, $Length(FilePathName) - $Find($Reverse(FilePathName), fSep) + 1)
+			
+	try
+	{
+		set Response = ..FastIdentifyImage(pRequest.STRPersonName, FilePath, FileName)	
+	}
+	catch x
+	{
+		set Response = x.Data
+		$$$TRACE("Exception " _ Response )
+	}
+	
+	set MsgResponse.STRResponse = Response
+	
+	// archive image that is not found
+	
+	if $Find(Response, "Unknown") > 0
+	{
+		set FilePathName = ..UnknownImageDir _ fSep _ FileName
+		
+		if '##class(%Library.File).CopyFile(pRequest.STRImagePath, FilePathName, 1)
+		{
+			$$$TRACE("Failed to archive file " _ FilePathName)	
+		}
+		else
+		{
+			do ##class(%File).Delete(pRequest.STRImagePath)
+		}	
+	}
+	
+	set tSC = ..SendRequestAsync(..pLogger, MsgResponse, "Logging")
+	return tSC
+]]></Implementation>
+</Method>
+
+<Method name="PyTrace">
+<Description>
+helper for python</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>msg:%String</FormalSpec>
+<Implementation><![CDATA[	$$$TRACE(msg)
+]]></Implementation>
+</Method>
+
+<Method name="trace">
+<Description>
+python hook</Description>
+<FormalSpec>msg:%String</FormalSpec>
+<Language>python</Language>
+<Implementation><![CDATA[
+	#how to use an IRIS class from Python
+	import iris
+	iris.cls('IMGREC.BPImageDetection').PyTrace(msg)
+]]></Implementation>
+</Method>
+
+<Method name="FastIdentifyImage">
+<FormalSpec>strOperation:%String,strImagePath:%String,strFileName:%String</FormalSpec>
+<Language>python</Language>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+	import face_recognition
+	import glob
+	import os
+	import iris
+	import numpy
+	from numba import jit
+
+	# TODO:
+	# not using strOperation for now
+	# use streams/globals for encodings (STRImageId) instead of db storage?
+	
+	@jit
+	def fastProcessing(image_path):	
+		unknown_image = face_recognition.load_image_file(image_path)
+		ret = [image_path, False, 'Unknown']
+		# assuming only one person in the image, for now
+		ue = face_recognition.face_encodings(unknown_image)
+		if (len(ue) == 0):
+			return ret
+
+		unknown_encoding = ue[0]
+		
+		stmt = iris.sql.prepare('SELECT STRImageId, STRPersonName FROM IMGREC.CLSMainData')
+		rs = stmt.execute()
+		
+		for idx, row in enumerate(rs):	
+			imageId = f'{row[0]}'
+			personName = f'{row[1]}'		
+			known_encoding = numpy.frombuffer(bytes.fromhex(imageId), dtype=numpy.float64)		
+			result = face_recognition.compare_faces([known_encoding], unknown_encoding)[0]
+			if result:
+				ret[1] = True
+				ret[2] = personName
+				break
+		return ret
+			
+	image_path = os.path.join(strImagePath, strFileName)
+	res = fastProcessing(image_path)
+	iris_res =  '{name:s} at {location:s}'.format(name=res[2], location=res[0]) 
+	return iris_res
+]]></Implementation>
+</Method>
+
+<Method name="IdentifyImage">
+<Description>
+this uses the images saved (and is slower)</Description>
+<FormalSpec>strOperation:%String,strImagePath:%String,strFileName:%String</FormalSpec>
+<Language>python</Language>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	# if this gets called, the first parameter really is an operation name: who, etc.
+	
+	import face_recognition
+	import glob
+	import os
+	import iris
+	
+	image_path = os.path.join(strImagePath, strFileName)
+	known_images_dir = self.KnownImageDir
+	
+	img_ext = '*.jpg'
+			
+	unknown_image = face_recognition.load_image_file(image_path)
+	unknown_encoding = face_recognition.face_encodings(unknown_image)[0]
+	# [0+] to detect if there are more images
+		
+	ret = [image_path, False, '']
+	os.chdir(known_images_dir)
+		
+	for file in glob.glob(img_ext):
+		# self.trace(file) # this is new
+		
+		known_image = face_recognition.load_image_file(file) # could these be stored in the database instead rather than file
+		# its a list of numpy.ndarray
+		
+		known_encoding = face_recognition.face_encodings(known_image)[0]
+		result = face_recognition.compare_faces([known_encoding], unknown_encoding)[0]
+		if result:
+			ret[1] = True
+			ret[2] = file
+			break
+			
+	# TODO return list not string	
+	if (ret[1] == True):
+		resp = iris.cls('IMGREC.CLSMainData').GetName(ret[2])
+		return image_path + ' found: ' + resp
+	else:
+		return image_path + ' not found'
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Content><![CDATA[
+// Helper method (gets list of files in the directory), unused for now
+
+]]></Content>
+</UDLText>
+
+<Method name="GetFiles">
+<FormalSpec>directory:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	#dim FilePtr as %File
+	#dim q as %Query
+	#dim tSC as %Status
+	#dim r as %List
+	#dim e as %Integer
+	#dim res as %String 
+	
+	set e = 0
+	set res = ""
+	set tSC = ##class(%File).FileSetExecute(.q, directory, "*.jpg")
+	
+	while(e = 0){
+		set tSC = ##class(%File).FileSetFetch(.q, .r, .e) // this fails
+		set res = res _ $LISTGET(r, 1) _ ";"
+	}
+	
+	// TODO
+	// this does not work well as string is too long, so something else would have to be returned. Array?
+	// this returns the full path, different from Python
+	return res
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DefaultData>BPImageDetectionDefaultData</DefaultData>
+<Data name="BPImageDetectionDefaultData">
+<Subscript>"BPImageDetection"</Subscript>
+<Value name="1">
+<Value>pLogger</Value>
+</Value>
+<Value name="2">
+<Value>KnownImageDir</Value>
+</Value>
+<Value name="3">
+<Value>UnknownImageDir</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Class name="IMGREC.BPRouterRoutingRule">
+<Description>
+</Description>
+<Super>Ens.Rule.Definition</Super>
+<TimeChanged>66312,39568.106431</TimeChanged>
+<TimeCreated>66297,64252.3311991</TimeCreated>
+
+<Parameter name="RuleAssistClass">
+<Default>EnsLib.MsgRouter.RuleAssist</Default>
+</Parameter>
+
+<XData name="RuleDefinition">
+<XMLNamespace>http://www.intersystems.com/rule</XMLNamespace>
+<Data><![CDATA[
+<ruleDefinition alias="" context="EnsLib.MsgRouter.RoutingEngine" production="IMGREC.PRImageRecognition">
+<ruleSet name="IMGRECRoutingRules" effectiveBegin="" effectiveEnd="">
+<rule name="R1_PersonExists" disabled="false">
+<when condition="Document.STRPersonName=&quot;who&quot;">
+<send transform="" target="IMGREC.BPImageDetection"></send>
+<return></return>
+</when>
+</rule>
+<rule name="R2_AddPerson">
+<constraint name="source" value="BSRMPersonImage"></constraint>
+<when condition="1">
+<trace value="&quot;Trace in Business rule: message class = &quot;_MsgClass"></trace>
+<send transform="IMGREC.DTMSGPersonImage" target="IMGREC.BOAddPersonImage"></send>
+<return></return>
+</when>
+</rule>
+</ruleSet>
+</ruleDefinition>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="IMGREC.DTMSGPersonImage">
+<Super>Ens.DataTransformDTL</Super>
+<TimeChanged>66312,42744.450449</TimeChanged>
+<TimeCreated>66312,38839.36895</TimeCreated>
+<DependsOn>IMGREC.RMPersonImage.Record</DependsOn>
+
+<Parameter name="IGNOREMISSINGSOURCE">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="REPORTERRORS">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="TREATEMPTYREPEATINGFIELDASNULL">
+<Default>0</Default>
+</Parameter>
+
+<XData name="DTL">
+<XMLNamespace>http://www.intersystems.com/dtl</XMLNamespace>
+<Data><![CDATA[
+<transform sourceClass='IMGREC.RMPersonImage.Record' targetClass='IMGREC.RMPersonImage.Record' create='new' language='objectscript' >
+<annotation>Convert name to upper case.</annotation>
+<assign value='source.STRImagePath' property='target.STRImagePath' action='set' />
+<assign value='..ToUpper(source.STRPersonName)' property='target.STRPersonName' action='set' />
+<code>
+<![CDATA[ $$$TRACE("In DTL")]]]]><![CDATA[></code>
+</transform>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="IMGREC.MSGResponse">
+<Description>
+Basic response (v1, String) to whatever inbound service was called.</Description>
+<Super>Ens.Response</Super>
+<TimeChanged>66299,41989.3261439</TimeChanged>
+<TimeCreated>66295,72440.5425426</TimeCreated>
+
+<Property name="STRResponse">
+<Description>
+Purpose is to write this back to the caller (directory, WS, etc).</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="300"/>
+</Property>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DefaultData>MSGResponseDefaultData</DefaultData>
+<Data name="MSGResponseDefaultData">
+<Subscript>"MSGResponse"</Subscript>
+<Value name="1">
+<Value>STRResponse</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Class name="IMGREC.PRImageRecognition">
+<Super>Ens.Production</Super>
+<TimeChanged>66313,48638.1657701</TimeChanged>
+<TimeCreated>66295,69068.9046622</TimeCreated>
+
+<XData name="ProductionDefinition">
+<Data><![CDATA[
+<Production Name="IMGREC.PRImageRecognition" TestingEnabled="true" LogGeneralTraceEvents="false">
+  <Description>Image recognition demo production. JP, 2022.</Description>
+  <ActorPoolSize>2</ActorPoolSize>
+  <Item Name="BSRMPersonImage" Category="" ClassName="EnsLib.RecordMap.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="Receives PersonImage files." LogTraceEvents="true" Schedule="">
+    <Setting Target="Host" Name="RecordMap">IMGREC.RMPersonImage</Setting>
+    <Setting Target="Adapter" Name="ArchivePath">C:\Users\petrescu\Documents\Dev\IMGDemo\MsgIn_v1\Archive\</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\Users\petrescu\Documents\Dev\IMGDemo\MsgIn_v1\</Setting>
+    <Setting Target="Adapter" Name="FileSpec">*.txt</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+    <Setting Target="Host" Name="TargetConfigNames">BPRouter</Setting>
+    <Setting Target="Host" Name="AlertOnError">1</Setting>
+    <Setting Target="Host" Name="SkipRecordParsingErrors">1</Setting>
+  </Item>
+  <Item Name="BPRouter" Category="" ClassName="EnsLib.MsgRouter.RoutingEngine" PoolSize="1" Enabled="true" Foreground="false" Comment="Routes requests" LogTraceEvents="true" Schedule="">
+    <Setting Target="Host" Name="BusinessRuleName">IMGREC.BPRouterRoutingRule</Setting>
+  </Item>
+  <Item Name="IMGREC.BOAddPersonImage" Category="" ClassName="IMGREC.BOAddPersonImage" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\Users\petrescu\Documents\Dev\IMGDemo\ImgStoreMain</Setting>
+  </Item>
+  <Item Name="IMGREC.BOFLogPut" Category="" ClassName="IMGREC.BOFLogPut" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
+    <Setting Target="Adapter" Name="FilePath">C:\Users\petrescu\Documents\Dev\IMGDemo\MsgOut\</Setting>
+  </Item>
+  <Item Name="IMGREC.BPImageDetection" Category="" ClassName="IMGREC.BPImageDetection" PoolSize="1" Enabled="true" Foreground="false" Comment="Actual Python image recognition" LogTraceEvents="true" Schedule="">
+    <Setting Target="Host" Name="AlertOnError">1</Setting>
+  </Item>
+</Production>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="IMGREC.RMPersonImage">
+<Description>
+RECORDMAP: Modified during compilation of RecordMap 'IMGREC.RMPersonImage'
+on 2022-07-23 at 13:32:07.893 [2022-07-23 05:32:07.893 UTC]
+by user _SYSTEM</Description>
+<Super>EnsLib.RecordMap.RecordMap</Super>
+<TimeChanged>66313,48727.8939985</TimeChanged>
+<TimeCreated>66297,57069.6607248</TimeCreated>
+
+<Method name="GetObject">
+<Description>
+Method to retrieve a record from a stream or device. This method will be generated based on the
+structure of the RecordMap. For testing purposes, a file name may be passed in the pStream argument.</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,*pObject:%RegisteredObject,pTimeout:%Numeric=-1,&pLookAhead:%String="",pLabelFound:%Boolean=0]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Try {
+		Set tStatus = $$$OK
+		Set pObject = $$$NULLOREF
+		If '$IsObject(pStream) {
+			Set tFilename = pStream
+			Set pStream = ##class(%IO.FileStream).%New()
+			Do pStream.Open(tFilename,,pTimeout,"UTF-8", .tStatus)
+			If $$$ISERR(tStatus) Quit
+		}
+		Set tObjectName = $parameter($this,"OBJECTNAME")
+		Set tObject = $classmethod(tObjectName,"%New")
+		If '$IsObject(tObject) {
+			Set tStatus = $$$ERROR($$$CannotCreateObject,tObjectName)
+			Quit
+		}
+		Set tObject.%Source = pStream.Name
+		Set tGetTopFields = $parameter(tObject,"INCLUDETOPFIELDS")
+		If pStream.AtEnd && (""=pLookAhead) {
+			Set tStatus = $$$ERROR($$$EnsRecordMapErrStreamAtEnd, pStream.Name)
+			Quit
+		}
+		Set pStream.CharEncoding = "UTF-8"
+
+		#; Parse incoming stream
+		Set tStatus = ..GetRecord(pStream, tObject, tGetTopFields, pTimeout, .pLookAhead, pLabelFound)
+		If $$$ISERR(tStatus) Quit
+	}
+	Catch ex {
+		Set tStatus = ex.AsStatus()
+	}
+	If $$$ISERR(tStatus) { Set pObject = $$$NULLOREF }
+	Else { Set pObject = tObject }
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="PutObject">
+<Description>
+Method to write a record to a stream or device. This method will be generated based on the
+structure of the RecordMap. For testing purposes, a file name may be passed in the pStream argument.</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pFlush:%Boolean=1,&pPadArray:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Try {
+		Set tStatus = $$$OK
+		If '$IsObject(pStream) {
+			Set tFilename = pStream
+			Set pStream = ##class(%IO.FileStream).%New()
+			Do pStream.Open(tFilename,"WAE",,"UTF-8", .tStatus)
+			If $$$ISERR(tStatus) Quit
+		}
+		Set tHasTopFields = $parameter(pObject,"INCLUDETOPFIELDS")
+		Set pStream.CharEncoding = "UTF-8"
+
+		Set tStatus = ..PutRecord(pStream, pObject, tHasTopFields, .pPadArray)
+		If $$$ISERR(tStatus) Quit
+		If pFlush Do pStream.Flush(.tStatus)
+		If $$$ISERR(tStatus) Quit
+	}
+	Catch ex {
+		Set tStatus = ex.AsStatus()
+	}
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Parameter name="OBJECTNAME">
+<Default>IMGREC.RMPersonImage.Record</Default>
+</Parameter>
+
+<Method name="GetRecord">
+<Description>
+Internal helper method to perform parse of incoming data</Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pGetTopFields:%Boolean,pTimeout:%Numeric,&pLookAhead:%String="",pLabelFound:%Boolean=0]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tStatus = $$$OK
+	If pLabelFound { Set tRecLabel = "" } 
+	Else { Set tRecLabel = "" } 
+	Set tStatus = ..chunkRecord(pStream, .tRecordData, .tCharCount, "", pTimeout, $char(13,10), tRecLabel, .pLookAhead, "")
+	If $$$ISERR(tStatus) Quit tStatus
+	Set tMaxLocal = $$$MaxLocalLength
+	Set tRecordData("charcount") = +$get(tCharCount)
+	Set tCurrChunk = 1
+	Set tTopPiece = 1
+	Set tCurrSep = 1
+	Set tStrings = 1
+	Set tCurrString = ""
+	Set tSeps = $listbuild($char(44))
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Else {
+		Set tCurrString = tRecordData(tCurrChunk)
+		Set tCurrPiece = 1
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.STRPersonName = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.STRImagePath = tCurrString
+	}
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="PutRecord">
+<Description>
+Internal helper method to output object to a stream</Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pHasTopFields:%Boolean,&pPadArray:%String]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tStatus = $$$OK
+	Set tmpStream=##class(%Stream.TmpBinary).%New()
+	Do tmpStream.Write($select(pHasTopFields: pObject.STRPersonName,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.STRImagePath,1: ""))
+	Set tStatus = tmpStream.Write($char(13,10))
+	If $$$ISERR(tStatus) Quit tStatus
+	Do pStream.CopyFrom(tmpStream,,0,.tStatus)
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="GetGeneratedClasses">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*pClasses:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Kill pClasses
+	Set pClasses("IMGREC.RMPersonImage.Record")=""
+	Set pClasses($classname())=""
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="getIdentifier">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec/>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[""
+]]></Implementation>
+</Method>
+
+<Method name="getType">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec/>
+<ReturnType>EnsLib.RecordMap.Model.DataType.RecordType</ReturnType>
+<Implementation><![CDATA["delimited"
+]]></Implementation>
+</Method>
+
+<XData name="RecordMap">
+<XMLNamespace>http://www.intersystems.com/Ensemble/RecordMap</XMLNamespace>
+<Data><![CDATA[
+<Record xmlns="http://www.intersystems.com/Ensemble/RecordMap" name="IMGREC.RMPersonImage" type="delimited" char_encoding="UTF-8" targetClassname="IMGREC.RMPersonImage.Record" recordTerminator="\x0d\x0a">
+  <Separators>
+    <Separator>,</Separator>
+  </Separators>
+  <Field name="STRPersonName" required="1" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="STRImagePath" required="1" ignored="0" datatype="%String" params="MAXLEN=400" repeating="0">
+  </Field>
+</Record>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="IMGREC.RMPersonImage.Record">
+<Description>
+RECORDMAP: Generated from RecordMap 'IMGREC.RMPersonImage'
+on 2022-07-23 at 13:32:07.889 [2022-07-23 05:32:07.889 UTC]
+by user _SYSTEM</Description>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>%Persistent,%XML.Adaptor,Ens.Request,EnsLib.RecordMap.Base</Super>
+<TimeChanged>66313,48727.8906179</TimeChanged>
+<TimeCreated>66313,48727.8895166</TimeCreated>
+<Inheritance>right</Inheritance>
+
+<Parameter name="INCLUDETOPFIELDS">
+<Default>1</Default>
+</Parameter>
+
+<Property name="STRPersonName">
+<Type>%String</Type>
+<Required>1</Required>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="STRImagePath">
+<Type>%String</Type>
+<Required>1</Required>
+<Parameter name="MAXLEN" value="400"/>
+</Property>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DataLocation>^IMGREC.RMPersonImage.RecordD</DataLocation>
+<DefaultData>RecordDefaultData</DefaultData>
+<IdLocation>^IMGREC.RMPersonImage.RecordD</IdLocation>
+<IndexLocation>^IMGREC.RMPersonImage.RecordI</IndexLocation>
+<StreamLocation>^IMGREC.RMPersonImage.RecordS</StreamLocation>
+<ExtentSize>2000000</ExtentSize>
+<Data name="RecordDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>STRPersonName</Value>
+</Value>
+<Value name="3">
+<Value>%Source</Value>
+</Value>
+<Value name="4">
+<Value>STRImagePath</Value>
+</Value>
+</Data>
+</Storage>
+
+<Parameter name="RECORDMAPGENERATED">
+<Default>1</Default>
+</Parameter>
+</Class>
+
+
+<Document name="EnsExportNotes.EnsExportProduction_2023-05-12 13-42-49_515+8.PTD"><ProjectTextDocument name="EnsExportNotes.EnsExportProduction_2023-05-12 13-42-49_515+8" description="Export Notes for export EnsExportProduction_2023-05-12 13-42-49_515+8">
+<![CDATA[<Deployment>
+<Creation>
+<Machine>SG7420RPETRESCU.ISCINTERNAL.COM</Machine>
+<Instance>IRIS</Instance>
+<Namespace>DEMO</Namespace>
+<SourceProduction>IMGREC.PRImageRecognition</SourceProduction>
+<Username>_SYSTEM</Username>
+<UTC>2023-05-12 05:43:49.790</UTC>
+</Creation>
+<Notes>
+<Line num="1">Testing GitHub process.</Line>
+</Notes>
+<Contents>
+<ExportProject>EnsExportProduction_2023-05-12 13-42-49_515+8</ExportProject>
+<Item num="1">IMGREC.BOAddPersonImage.CLS</Item>
+<Item num="2">IMGREC.BOFLogPut.CLS</Item>
+<Item num="3">IMGREC.BPImageDetection.CLS</Item>
+<Item num="4">IMGREC.BPRouterRoutingRule.CLS</Item>
+<Item num="5">IMGREC.DTMSGPersonImage.CLS</Item>
+<Item num="6">IMGREC.MSGResponse.CLS</Item>
+<Item num="7">IMGREC.PRImageRecognition.CLS</Item>
+<Item num="8">IMGREC.RMPersonImage.CLS</Item>
+<Item num="9">IMGREC.RMPersonImage.Record.CLS</Item>
+</Contents>
+<ProductionClassInExport>IMGREC.PRImageRecognition</ProductionClassInExport>
+</Deployment>
+
+]]></ProjectTextDocument>
+</Document></Export>
