@@ -1,0 +1,1705 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2023.1 (Build 229U)" ts="2023-05-17 16:05:50">
+<Project name="EnsExportProduction_2023-05-17 16-05-39_934+8" LastModified="2023-05-17 16:05:50.1137802">
+  <ProjectDescription>Studio Project generated from Production 'SATUSEHATPKG.FoundationProduction' at 2023-05-17 08:05:39.934 UTC</ProjectDescription>
+  <Items>
+    <ProjectItem name="OrganizationRM" type="CLS"></ProjectItem>
+    <ProjectItem name="SATUSEHATPKG.FoundationProduction" type="CLS"></ProjectItem>
+    <ProjectItem name="User.OrganizationRM" type="CLS"></ProjectItem>
+    <ProjectItem name="User.OrganizationRM.Record" type="CLS"></ProjectItem>
+    <ProjectItem name="fhir.bp.csvToFhirOrganization" type="CLS"></ProjectItem>
+    <ProjectItem name="fhir.dtl.csvToFhirR4Organization" type="CLS"></ProjectItem>
+    <ProjectItem name="production.bo.Satusehat" type="CLS"></ProjectItem>
+    <ProjectItem name="EnsExportNotes.EnsExportProduction_2023-05-17 16-05-39_934+8.PTD" type="PTD"></ProjectItem>
+  </Items>
+</Project>
+
+
+<Class name="User.OrganizationRM">
+<Description>
+RECORDMAP: Modified during compilation of RecordMap 'User.OrganizationRM'
+on 2023-05-16 at 15:25:34.396 [2023-05-16 07:25:34.396 UTC]
+by user SuperUser</Description>
+<Super>EnsLib.RecordMap.RecordMap</Super>
+<TimeChanged>66610,55534.3981042</TimeChanged>
+<TimeCreated>66610,55294.7780948</TimeCreated>
+
+<Method name="GetObject">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Method to retrieve a record from a stream or device. This method will be generated based on the
+structure of the RecordMap. For testing purposes, a file name may be passed in the pStream argument.]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,*pObject:%RegisteredObject,pTimeout:%Numeric=-1,&pLookAhead:%String="",pLabelFound:%Boolean=0]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Try {
+		Set tStatus = $$$OK
+		Set pObject = $$$NULLOREF
+		If '$IsObject(pStream) {
+			Set tFilename = pStream
+			Set pStream = ##class(%IO.FileStream).%New()
+			Do pStream.Open(tFilename,,pTimeout,"UTF-8", .tStatus)
+			If $$$ISERR(tStatus) Quit
+		}
+		Set tObjectName = $parameter($this,"OBJECTNAME")
+		Set tObject = $classmethod(tObjectName,"%New")
+		If '$IsObject(tObject) {
+			Set tStatus = $$$ERROR($$$CannotCreateObject,tObjectName)
+			Quit
+		}
+		Set tObject.%Source = pStream.Name
+		Set tGetTopFields = $parameter(tObject,"INCLUDETOPFIELDS")
+		If pStream.AtEnd && (""=pLookAhead) {
+			Set tStatus = $$$ERROR($$$EnsRecordMapErrStreamAtEnd, pStream.Name)
+			Quit
+		}
+		Set pStream.CharEncoding = "UTF-8"
+
+		#; Parse incoming stream
+		Set tStatus = ..GetRecord(pStream, tObject, tGetTopFields, pTimeout, .pLookAhead, pLabelFound)
+		If $$$ISERR(tStatus) Quit
+	}
+	Catch ex {
+		Set tStatus = ex.AsStatus()
+	}
+	If $$$ISERR(tStatus) { Set pObject = $$$NULLOREF }
+	Else { Set pObject = tObject }
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="PutObject">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Method to write a record to a stream or device. This method will be generated based on the
+structure of the RecordMap. For testing purposes, a file name may be passed in the pStream argument.]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pFlush:%Boolean=1,&pPadArray:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Try {
+		Set tStatus = $$$OK
+		If '$IsObject(pStream) {
+			Set tFilename = pStream
+			Set pStream = ##class(%IO.FileStream).%New()
+			Do pStream.Open(tFilename,"WAE",,"UTF-8", .tStatus)
+			If $$$ISERR(tStatus) Quit
+		}
+		Set tHasTopFields = $parameter(pObject,"INCLUDETOPFIELDS")
+		Set pStream.CharEncoding = "UTF-8"
+
+		Set tStatus = ..PutRecord(pStream, pObject, tHasTopFields, .pPadArray)
+		If $$$ISERR(tStatus) Quit
+		If pFlush Do pStream.Flush(.tStatus)
+		If $$$ISERR(tStatus) Quit
+	}
+	Catch ex {
+		Set tStatus = ex.AsStatus()
+	}
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Parameter name="OBJECTNAME">
+<Default>User.OrganizationRM.Record</Default>
+</Parameter>
+
+<Method name="GetRecord">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Internal helper method to perform parse of incoming data]]></Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pGetTopFields:%Boolean,pTimeout:%Numeric,&pLookAhead:%String="",pLabelFound:%Boolean=0]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tStatus = $$$OK
+	If pLabelFound { Set tRecLabel = "" } 
+	Else { Set tRecLabel = "" } 
+	Set tStatus = ..chunkRecord(pStream, .tRecordData, .tCharCount, "", pTimeout, $char(13,10), tRecLabel, .pLookAhead, "", 0)
+	If $$$ISERR(tStatus) Quit tStatus
+	Set tMaxLocal = $$$MaxLocalLength
+	Set tRecordData("charcount") = +$get(tCharCount)
+	Set tCurrChunk = 1
+	Set tTopPiece = 1
+	Set tCurrSep = 1
+	Set tStrings = 1
+	Set tCurrString = ""
+	Set tSeps = $listbuild($char(44))
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Else {
+		Set tCurrString = tRecordData(tCurrChunk)
+		Set tCurrPiece = 1
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.resourceType = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.active = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.identifierUse = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.identifierSystem = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.identifierValue = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.typeCodingSystem = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.typeCodingCode = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.typeCodingDisplay = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.name = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomSystem1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomValue1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomUse1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomSystem2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomValue2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomUse2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomSystem3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomValue3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomUse3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressUse = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressType = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressLine = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressCity = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressPostalCode = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressCountry = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtUrl = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtValueCode1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtvalueCode2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtvalueCode3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl4 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtvalueCode4 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.partOfReference = tCurrString
+	}
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="PutRecord">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Internal helper method to output object to a stream]]></Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pHasTopFields:%Boolean,&pPadArray:%String]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tStatus = $$$OK
+	Set tmpStream=##class(%Stream.TmpBinary).%New()
+	Do tmpStream.Write($select(pHasTopFields: pObject.resourceType,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.active,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.identifierUse,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.identifierSystem,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.identifierValue,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.typeCodingSystem,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.typeCodingCode,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.typeCodingDisplay,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.name,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomSystem1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomValue1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomUse1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomSystem2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomValue2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomUse2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomSystem3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomValue3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomUse3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressUse,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressType,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressLine,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressCity,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressPostalCode,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressCountry,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtUrl,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtValueCode1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtvalueCode2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtvalueCode3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl4,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtvalueCode4,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.partOfReference,1: ""))
+	Set tStatus = tmpStream.Write($char(13,10))
+	If $$$ISERR(tStatus) Quit tStatus
+	Do pStream.CopyFrom(tmpStream,,0,.tStatus)
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="GetGeneratedClasses">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*pClasses:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Kill pClasses
+	Set pClasses("User.OrganizationRM.Record")=""
+	Set pClasses($classname())=""
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="getIdentifier">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec/>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[""
+]]></Implementation>
+</Method>
+
+<Method name="getType">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec/>
+<ReturnType>EnsLib.RecordMap.Model.DataType.RecordType</ReturnType>
+<Implementation><![CDATA["delimited"
+]]></Implementation>
+</Method>
+
+<XData name="RecordMap">
+<XMLNamespace>http://www.intersystems.com/Ensemble/RecordMap</XMLNamespace>
+<Data><![CDATA[
+<Record xmlns="http://www.intersystems.com/Ensemble/RecordMap" name="User.OrganizationRM" type="delimited" char_encoding="UTF-8" targetClassname="User.OrganizationRM.Record" recordTerminator="\x0d\x0a">
+  <Separators>
+    <Separator>,</Separator>
+  </Separators>
+  <Field name="resourceType" datatype="%String">
+  </Field>
+  <Field name="active" datatype="%String">
+  </Field>
+  <Field name="identifierUse" datatype="%String">
+  </Field>
+  <Field name="identifierSystem" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="identifierValue" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="typeCodingSystem" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="typeCodingCode" datatype="%String">
+  </Field>
+  <Field name="typeCodingDisplay" datatype="%String">
+  </Field>
+  <Field name="name" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomSystem1" datatype="%String">
+  </Field>
+  <Field name="telecomValue1" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomUse1" datatype="%String">
+  </Field>
+  <Field name="telecomSystem2" datatype="%String">
+  </Field>
+  <Field name="telecomValue2" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomUse2" datatype="%String">
+  </Field>
+  <Field name="telecomSystem3" datatype="%String">
+  </Field>
+  <Field name="telecomValue3" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomUse3" datatype="%String">
+  </Field>
+  <Field name="addressUse" datatype="%String">
+  </Field>
+  <Field name="addressType" datatype="%String">
+  </Field>
+  <Field name="addressLine" required="0" ignored="0" datatype="%String" params="MAXLEN=300" repeating="0">
+  </Field>
+  <Field name="addressCity" datatype="%String">
+  </Field>
+  <Field name="addressPostalCode" datatype="%String">
+  </Field>
+  <Field name="addressCountry" datatype="%String">
+  </Field>
+  <Field name="addressExtUrl" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="addressExtExtUrl1" datatype="%String">
+  </Field>
+  <Field name="addressExtExtValueCode1" datatype="%String">
+  </Field>
+  <Field name="addressExtExtUrl2" datatype="%String">
+  </Field>
+  <Field name="addressExtExtvalueCode2" datatype="%String">
+  </Field>
+  <Field name="addressExtExtUrl3" datatype="%String">
+  </Field>
+  <Field name="addressExtExtvalueCode3" datatype="%String">
+  </Field>
+  <Field name="addressExtExtUrl4" datatype="%String">
+  </Field>
+  <Field name="addressExtExtvalueCode4" datatype="%String">
+  </Field>
+  <Field name="partOfReference" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+</Record>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="SATUSEHATPKG.FoundationProduction">
+<ProcedureBlock>0</ProcedureBlock>
+<Super>Ens.Production</Super>
+<TimeChanged>66611,57591.272754</TimeChanged>
+<TimeCreated>66609,73023.6479655</TimeCreated>
+
+<XData name="ProductionDefinition">
+<Data><![CDATA[
+<Production Name="SATUSEHATPKG.FoundationProduction" TestingEnabled="true" LogGeneralTraceEvents="false">
+  <Description></Description>
+  <ActorPoolSize>1</ActorPoolSize>
+  <Item Name="ToSatusehat" Category="" ClassName="production.bo.Satusehat" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Host" Name="AccessTokenCredentials">AccessTokenCredentials</Setting>
+    <Setting Target="Host" Name="SSLConfiguration">DefaultSSL</Setting>
+    <Setting Target="Host" Name="ServiceName">satusehat</Setting>
+    <Setting Target="Host" Name="TraceOperations">*FULL*</Setting>
+  </Item>
+  <Item Name="HS.Util.Trace.Operations" Category="" ClassName="HS.Util.Trace.Operations" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+  <Item Name="FileInput" Category="" ClassName="EnsLib.RecordMap.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="ArchivePath">C:\DemoFileInOut\csv\Archive\</Setting>
+    <Setting Target="Adapter" Name="CallInterval">5000</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\DemoFileInOut\csv\In\</Setting>
+    <Setting Target="Host" Name="TargetConfigNames">csvToFhirOrganization</Setting>
+    <Setting Target="Host" Name="RecordMap">OrganizationRM</Setting>
+  </Item>
+  <Item Name="csvToFhirOrganization" Category="" ClassName="fhir.bp.csvToFhirOrganization" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
+  </Item>
+</Production>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="User.OrganizationRM">
+<Description>
+RECORDMAP: Modified during compilation of RecordMap 'User.OrganizationRM'
+on 2023-05-16 at 15:25:34.396 [2023-05-16 07:25:34.396 UTC]
+by user SuperUser</Description>
+<Super>EnsLib.RecordMap.RecordMap</Super>
+<TimeChanged>66610,55534.3981042</TimeChanged>
+<TimeCreated>66610,55294.7780948</TimeCreated>
+
+<Method name="GetObject">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Method to retrieve a record from a stream or device. This method will be generated based on the
+structure of the RecordMap. For testing purposes, a file name may be passed in the pStream argument.]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,*pObject:%RegisteredObject,pTimeout:%Numeric=-1,&pLookAhead:%String="",pLabelFound:%Boolean=0]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Try {
+		Set tStatus = $$$OK
+		Set pObject = $$$NULLOREF
+		If '$IsObject(pStream) {
+			Set tFilename = pStream
+			Set pStream = ##class(%IO.FileStream).%New()
+			Do pStream.Open(tFilename,,pTimeout,"UTF-8", .tStatus)
+			If $$$ISERR(tStatus) Quit
+		}
+		Set tObjectName = $parameter($this,"OBJECTNAME")
+		Set tObject = $classmethod(tObjectName,"%New")
+		If '$IsObject(tObject) {
+			Set tStatus = $$$ERROR($$$CannotCreateObject,tObjectName)
+			Quit
+		}
+		Set tObject.%Source = pStream.Name
+		Set tGetTopFields = $parameter(tObject,"INCLUDETOPFIELDS")
+		If pStream.AtEnd && (""=pLookAhead) {
+			Set tStatus = $$$ERROR($$$EnsRecordMapErrStreamAtEnd, pStream.Name)
+			Quit
+		}
+		Set pStream.CharEncoding = "UTF-8"
+
+		#; Parse incoming stream
+		Set tStatus = ..GetRecord(pStream, tObject, tGetTopFields, pTimeout, .pLookAhead, pLabelFound)
+		If $$$ISERR(tStatus) Quit
+	}
+	Catch ex {
+		Set tStatus = ex.AsStatus()
+	}
+	If $$$ISERR(tStatus) { Set pObject = $$$NULLOREF }
+	Else { Set pObject = tObject }
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="PutObject">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Method to write a record to a stream or device. This method will be generated based on the
+structure of the RecordMap. For testing purposes, a file name may be passed in the pStream argument.]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pFlush:%Boolean=1,&pPadArray:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Try {
+		Set tStatus = $$$OK
+		If '$IsObject(pStream) {
+			Set tFilename = pStream
+			Set pStream = ##class(%IO.FileStream).%New()
+			Do pStream.Open(tFilename,"WAE",,"UTF-8", .tStatus)
+			If $$$ISERR(tStatus) Quit
+		}
+		Set tHasTopFields = $parameter(pObject,"INCLUDETOPFIELDS")
+		Set pStream.CharEncoding = "UTF-8"
+
+		Set tStatus = ..PutRecord(pStream, pObject, tHasTopFields, .pPadArray)
+		If $$$ISERR(tStatus) Quit
+		If pFlush Do pStream.Flush(.tStatus)
+		If $$$ISERR(tStatus) Quit
+	}
+	Catch ex {
+		Set tStatus = ex.AsStatus()
+	}
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Parameter name="OBJECTNAME">
+<Default>User.OrganizationRM.Record</Default>
+</Parameter>
+
+<Method name="GetRecord">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Internal helper method to perform parse of incoming data]]></Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pGetTopFields:%Boolean,pTimeout:%Numeric,&pLookAhead:%String="",pLabelFound:%Boolean=0]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tStatus = $$$OK
+	If pLabelFound { Set tRecLabel = "" } 
+	Else { Set tRecLabel = "" } 
+	Set tStatus = ..chunkRecord(pStream, .tRecordData, .tCharCount, "", pTimeout, $char(13,10), tRecLabel, .pLookAhead, "", 0)
+	If $$$ISERR(tStatus) Quit tStatus
+	Set tMaxLocal = $$$MaxLocalLength
+	Set tRecordData("charcount") = +$get(tCharCount)
+	Set tCurrChunk = 1
+	Set tTopPiece = 1
+	Set tCurrSep = 1
+	Set tStrings = 1
+	Set tCurrString = ""
+	Set tSeps = $listbuild($char(44))
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Else {
+		Set tCurrString = tRecordData(tCurrChunk)
+		Set tCurrPiece = 1
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.resourceType = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.active = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.identifierUse = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.identifierSystem = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.identifierValue = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.typeCodingSystem = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.typeCodingCode = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.typeCodingDisplay = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.name = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomSystem1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomValue1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomUse1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomSystem2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomValue2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomUse2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomSystem3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomValue3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.telecomUse3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressUse = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressType = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressLine = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressCity = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressPostalCode = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressCountry = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtUrl = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtValueCode1 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtvalueCode2 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtvalueCode3 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtUrl4 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.addressExtExtvalueCode4 = tCurrString
+	}
+	If '$data(tRecordData(tCurrChunk, "block")) {
+		Set tCurrString = $piece(tRecordData(tCurrChunk), $char(44), tTopPiece)
+	}
+	Do ..checkMerge(.tCurrChunk, .tRecordData, .tCurrString, $char(44), .tTopPiece)
+	If pGetTopFields {
+		Set pObject.partOfReference = tCurrString
+	}
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="PutRecord">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+Internal helper method to output object to a stream]]></Description>
+<Internal>1</Internal>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[pStream:%IO.DeviceStream,pObject:%RegisteredObject,pHasTopFields:%Boolean,&pPadArray:%String]]></FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tStatus = $$$OK
+	Set tmpStream=##class(%Stream.TmpBinary).%New()
+	Do tmpStream.Write($select(pHasTopFields: pObject.resourceType,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.active,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.identifierUse,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.identifierSystem,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.identifierValue,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.typeCodingSystem,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.typeCodingCode,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.typeCodingDisplay,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.name,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomSystem1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomValue1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomUse1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomSystem2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomValue2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomUse2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomSystem3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomValue3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.telecomUse3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressUse,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressType,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressLine,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressCity,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressPostalCode,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressCountry,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtUrl,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtValueCode1,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtvalueCode2,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtvalueCode3,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtUrl4,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.addressExtExtvalueCode4,1: ""))
+	Do tmpStream.Write($char(44) _ $select(pHasTopFields: pObject.partOfReference,1: ""))
+	Set tStatus = tmpStream.Write($char(13,10))
+	If $$$ISERR(tStatus) Quit tStatus
+	Do pStream.CopyFrom(tmpStream,,0,.tStatus)
+	Quit tStatus
+]]></Implementation>
+</Method>
+
+<Method name="GetGeneratedClasses">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*pClasses:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Kill pClasses
+	Set pClasses("User.OrganizationRM.Record")=""
+	Set pClasses($classname())=""
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="getIdentifier">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec/>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[""
+]]></Implementation>
+</Method>
+
+<Method name="getType">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec/>
+<ReturnType>EnsLib.RecordMap.Model.DataType.RecordType</ReturnType>
+<Implementation><![CDATA["delimited"
+]]></Implementation>
+</Method>
+
+<XData name="RecordMap">
+<XMLNamespace>http://www.intersystems.com/Ensemble/RecordMap</XMLNamespace>
+<Data><![CDATA[
+<Record xmlns="http://www.intersystems.com/Ensemble/RecordMap" name="User.OrganizationRM" type="delimited" char_encoding="UTF-8" targetClassname="User.OrganizationRM.Record" recordTerminator="\x0d\x0a">
+  <Separators>
+    <Separator>,</Separator>
+  </Separators>
+  <Field name="resourceType" datatype="%String">
+  </Field>
+  <Field name="active" datatype="%String">
+  </Field>
+  <Field name="identifierUse" datatype="%String">
+  </Field>
+  <Field name="identifierSystem" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="identifierValue" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="typeCodingSystem" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="typeCodingCode" datatype="%String">
+  </Field>
+  <Field name="typeCodingDisplay" datatype="%String">
+  </Field>
+  <Field name="name" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomSystem1" datatype="%String">
+  </Field>
+  <Field name="telecomValue1" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomUse1" datatype="%String">
+  </Field>
+  <Field name="telecomSystem2" datatype="%String">
+  </Field>
+  <Field name="telecomValue2" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomUse2" datatype="%String">
+  </Field>
+  <Field name="telecomSystem3" datatype="%String">
+  </Field>
+  <Field name="telecomValue3" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="telecomUse3" datatype="%String">
+  </Field>
+  <Field name="addressUse" datatype="%String">
+  </Field>
+  <Field name="addressType" datatype="%String">
+  </Field>
+  <Field name="addressLine" required="0" ignored="0" datatype="%String" params="MAXLEN=300" repeating="0">
+  </Field>
+  <Field name="addressCity" datatype="%String">
+  </Field>
+  <Field name="addressPostalCode" datatype="%String">
+  </Field>
+  <Field name="addressCountry" datatype="%String">
+  </Field>
+  <Field name="addressExtUrl" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+  <Field name="addressExtExtUrl1" datatype="%String">
+  </Field>
+  <Field name="addressExtExtValueCode1" datatype="%String">
+  </Field>
+  <Field name="addressExtExtUrl2" datatype="%String">
+  </Field>
+  <Field name="addressExtExtvalueCode2" datatype="%String">
+  </Field>
+  <Field name="addressExtExtUrl3" datatype="%String">
+  </Field>
+  <Field name="addressExtExtvalueCode3" datatype="%String">
+  </Field>
+  <Field name="addressExtExtUrl4" datatype="%String">
+  </Field>
+  <Field name="addressExtExtvalueCode4" datatype="%String">
+  </Field>
+  <Field name="partOfReference" required="0" ignored="0" datatype="%String" params="MAXLEN=200" repeating="0">
+  </Field>
+</Record>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="User.OrganizationRM.Record">
+<Description><![CDATA[
+THIS IS GENERATED CODE. DO NOT EDIT.<br/>
+RECORDMAP: Generated from RecordMap 'User.OrganizationRM'
+on 2023-05-16 at 15:25:34.337 [2023-05-16 07:25:34.337 UTC]
+by user SuperUser]]></Description>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>%Persistent,%XML.Adaptor,Ens.Request,EnsLib.RecordMap.Base</Super>
+<TimeChanged>66610,55534.7472664</TimeChanged>
+<TimeCreated>66610,55534.337508</TimeCreated>
+<Inheritance>right</Inheritance>
+
+<Parameter name="INCLUDETOPFIELDS">
+<Default>1</Default>
+</Parameter>
+
+<Property name="resourceType">
+<Type>%String</Type>
+</Property>
+
+<Property name="active">
+<Type>%String</Type>
+</Property>
+
+<Property name="identifierUse">
+<Type>%String</Type>
+</Property>
+
+<Property name="identifierSystem">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="identifierValue">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="typeCodingSystem">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="typeCodingCode">
+<Type>%String</Type>
+</Property>
+
+<Property name="typeCodingDisplay">
+<Type>%String</Type>
+</Property>
+
+<Property name="name">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="telecomSystem1">
+<Type>%String</Type>
+</Property>
+
+<Property name="telecomValue1">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="telecomUse1">
+<Type>%String</Type>
+</Property>
+
+<Property name="telecomSystem2">
+<Type>%String</Type>
+</Property>
+
+<Property name="telecomValue2">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="telecomUse2">
+<Type>%String</Type>
+</Property>
+
+<Property name="telecomSystem3">
+<Type>%String</Type>
+</Property>
+
+<Property name="telecomValue3">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="telecomUse3">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressUse">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressType">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressLine">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="300"/>
+</Property>
+
+<Property name="addressCity">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressPostalCode">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressCountry">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtUrl">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Property name="addressExtExtUrl1">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtExtValueCode1">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtExtUrl2">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtExtvalueCode2">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtExtUrl3">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtExtvalueCode3">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtExtUrl4">
+<Type>%String</Type>
+</Property>
+
+<Property name="addressExtExtvalueCode4">
+<Type>%String</Type>
+</Property>
+
+<Property name="partOfReference">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="200"/>
+</Property>
+
+<Parameter name="RECORDMAPGENERATED">
+<Default>1</Default>
+</Parameter>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DataLocation>^User.OrganizationRM.RecordD</DataLocation>
+<DefaultData>RecordDefaultData</DefaultData>
+<IdLocation>^User.OrganizationRM.RecordD</IdLocation>
+<IndexLocation>^User.OrganizationRM.RecordI</IndexLocation>
+<StreamLocation>^User.OrganizationRM.RecordS</StreamLocation>
+<ExtentSize>2000000</ExtentSize>
+<Data name="RecordDefaultData">
+<Structure>listnode</Structure>
+<Subscript/>
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>resourceType</Value>
+</Value>
+<Value name="3">
+<Value>%Source</Value>
+</Value>
+<Value name="4">
+<Value>identifierUse</Value>
+</Value>
+<Value name="5">
+<Value>identifierSystem</Value>
+</Value>
+<Value name="6">
+<Value>identifierValue</Value>
+</Value>
+<Value name="7">
+<Value>typeCodingSystem</Value>
+</Value>
+<Value name="8">
+<Value>typeCodingCode</Value>
+</Value>
+<Value name="9">
+<Value>typeCodingDisplay</Value>
+</Value>
+<Value name="10">
+<Value>name</Value>
+</Value>
+<Value name="11">
+<Value>telecomSystem1</Value>
+</Value>
+<Value name="12">
+<Value>telecomValue1</Value>
+</Value>
+<Value name="13">
+<Value>telecomUse1</Value>
+</Value>
+<Value name="14">
+<Value>telecomSystem2</Value>
+</Value>
+<Value name="15">
+<Value>telecomValue2</Value>
+</Value>
+<Value name="16">
+<Value>telecomUse2</Value>
+</Value>
+<Value name="17">
+<Value>telecomSystem3</Value>
+</Value>
+<Value name="18">
+<Value>telecomValue3</Value>
+</Value>
+<Value name="19">
+<Value>telecomUse3</Value>
+</Value>
+<Value name="20">
+<Value>addressUse</Value>
+</Value>
+<Value name="21">
+<Value>addressType</Value>
+</Value>
+<Value name="22">
+<Value>addressLine</Value>
+</Value>
+<Value name="23">
+<Value>addressCity</Value>
+</Value>
+<Value name="24">
+<Value>addressPostalCode</Value>
+</Value>
+<Value name="25">
+<Value>addressCountry</Value>
+</Value>
+<Value name="26">
+<Value>addressExtUrl</Value>
+</Value>
+<Value name="27">
+<Value>addressExtExtUrl1</Value>
+</Value>
+<Value name="28">
+<Value>addressExtExtValueCode1</Value>
+</Value>
+<Value name="29">
+<Value>addressExtExtUrl2</Value>
+</Value>
+<Value name="30">
+<Value>addressExtExtvalueCode2</Value>
+</Value>
+<Value name="31">
+<Value>addressExtExtUrl3</Value>
+</Value>
+<Value name="32">
+<Value>addressExtExtvalueCode3</Value>
+</Value>
+<Value name="33">
+<Value>addressExtExtUrl4</Value>
+</Value>
+<Value name="34">
+<Value>addressExtExtvalueCode4</Value>
+</Value>
+<Value name="35">
+<Value>partOfReference</Value>
+</Value>
+<Value name="36">
+<Value>active</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Class name="fhir.bp.csvToFhirOrganization">
+<Description>
+</Description>
+<Super>Ens.BusinessProcessBPL</Super>
+<TimeChanged>66611,57547.1474746</TimeChanged>
+<TimeCreated>66611,52700.9317422</TimeCreated>
+
+<XData name="BPL">
+<Description>
+BPL Definition</Description>
+<XMLNamespace>http://www.intersystems.com/bpl</XMLNamespace>
+<Data><![CDATA[
+<process language='objectscript' request='User.OrganizationRM.Record' response='Ens.Response' height='2000' width='2000' >
+<context>
+<property name='fhirOrganization' type='HS.FHIR.DTL.vR4.Model.Resource.Organization' instantiate='0' />
+<property name='StreamId' type='%String' instantiate='0' >
+<parameters>
+<parameter name='MAXLEN'  value='50' />
+</parameters>
+</property>
+</context>
+<sequence xend='200' yend='550' >
+<transform name='csv to fhir' class='fhir.dtl.csvToFhirR4Organization' source='request' target='context.fhirOrganization' xpos='200' ypos='250' />
+<code name='covert to stream' xpos='200' ypos='350' >
+<![CDATA[ set outp = context.fhirOrganization.ToJSON()
+ Set tQuickStream = ##class(HS.SDA3.QuickStream).%New()
+ set tSC=tQuickStream.Write(outp.Read())
+ set context.StreamId =tQuickStream.%Id()
+]]]]><![CDATA[>
+</code>
+<call name='Call Bo' target='ToSatusehat' async='1' xpos='200' ypos='450' >
+<request type='HS.FHIRServer.Interop.Request' >
+<assign property="callrequest.QuickStreamId" value="context.StreamId" action="set" />
+<assign property="callrequest.Request.RequestPath" value="&quot;Organization&quot;" action="set" />
+<assign property="callrequest.Request.RequestMethod" value="&quot;POST&quot;" action="set" />
+<assign property="callrequest.Request.RequestFormatCode" value="&quot;JSON&quot;" action="set" />
+<assign property="callrequest.Request.ResponseFormatCode" value="&quot;JSON&quot;" action="set" />
+</request>
+<response type='HS.FHIRServer.Interop.Response' />
+</call>
+</sequence>
+</process>
+]]></Data>
+</XData>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+</Storage>
+</Class>
+
+
+<Class name="fhir.dtl.csvToFhirR4Organization">
+<Super>Ens.DataTransformDTL</Super>
+<TimeChanged>66611,57555.5343391</TimeChanged>
+<TimeCreated>66611,27640.3461856</TimeCreated>
+<DependsOn>User.OrganizationRM.Record,HS.FHIR.DTL.vR4.Model.Resource.Organization</DependsOn>
+
+<Parameter name="IGNOREMISSINGSOURCE">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="REPORTERRORS">
+<Default>1</Default>
+</Parameter>
+
+<Parameter name="TREATEMPTYREPEATINGFIELDASNULL">
+<Default>0</Default>
+</Parameter>
+
+<XData name="DTL">
+<XMLNamespace>http://www.intersystems.com/dtl</XMLNamespace>
+<Data><![CDATA[
+<transform sourceClass='User.OrganizationRM.Record' targetClass='HS.FHIR.DTL.vR4.Model.Resource.Organization' create='new' language='objectscript' >
+<assign value='source.resourceType' property='target.resourceType' action='set' disabled='1' />
+<assign value='source.active' property='target.active' action='set' />
+<if condition='source.active="TRUE"' >
+<true>
+<assign value='1' property='target.active' action='set' />
+</true>
+<false>
+<assign value='0' property='target.active' action='set' />
+</false>
+</if>
+<assign value='source.identifierUse' property='target.identifier.(1).use' action='set' />
+<assign value='source.identifierSystem' property='target.identifier.(1).system' action='set' />
+<assign value='source.identifierValue' property='target.identifier.(1).value' action='set' />
+<group expanded='false' >
+<annotation>type</annotation>
+<assign value='source.typeCodingSystem' property='target.type.(1).coding.(1).system' action='set' />
+<assign value='source.typeCodingCode' property='target.type.(1).coding.(1).code' action='set' />
+<assign value='source.typeCodingDisplay' property='target.type.(1).coding.(1).display' action='set' />
+</group>
+<assign value='source.name' property='target.name' action='set' />
+<group expanded='false' >
+<annotation>telecom1</annotation>
+<assign value='source.telecomSystem1' property='target.telecom.(1).system' action='set' />
+<assign value='source.telecomValue1' property='target.telecom.(1).value' action='set' />
+<assign value='source.telecomUse1' property='target.telecom.(1).use' action='set' />
+</group>
+<group expanded='false' >
+<annotation>telecom2</annotation>
+<assign value='source.telecomSystem2' property='target.telecom.(2).system' action='set' />
+<assign value='source.telecomValue2' property='target.telecom.(2).value' action='set' />
+<assign value='source.telecomUse2' property='target.telecom.(2).use' action='set' />
+</group>
+<group expanded='false' >
+<annotation>telecom3</annotation>
+<assign value='source.telecomSystem3' property='target.telecom.(3).system' action='set' />
+<assign value='source.telecomValue3' property='target.telecom.(3).value' action='set' />
+<assign value='source.telecomUse3' property='target.telecom.(3).use' action='set' />
+</group>
+<assign value='source.partOfReference' property='target.partOf.reference' action='set' />
+<assign value='source.addressUse' property='target.address.(1).use' action='set' />
+<assign value='source.addressType' property='target.address.(1).type' action='set' />
+<assign value='source.addressLine' property='target.address.(1).line.(1)' action='set' />
+<assign value='source.addressCity' property='target.address.(1).city' action='set' />
+<assign value='source.addressPostalCode' property='target.address.(1).postalCode' action='set' />
+<assign value='source.addressCountry' property='target.address.(1).country' action='set' />
+<assign value='source.addressExtUrl' property='target.address.(1).extension.(1).url' action='set' />
+<group>
+<annotation>address extension extension 1</annotation>
+<assign value='source.addressExtExtUrl1' property='target.address.(1).extension.(1).extension.(1).url' action='set' />
+<assign value='source.addressExtExtValueCode1' property='target.address.(1).extension.(1).extension.(1).valueCode' action='set' />
+</group>
+<group>
+<annotation>address extension extension 2</annotation>
+<assign value='source.addressExtExtUrl2' property='target.address.(1).extension.(1).extension.(2).url' action='set' />
+<assign value='source.addressExtExtvalueCode2' property='target.address.(1).extension.(1).extension.(2).valueCode' action='set' />
+</group>
+<group>
+<annotation>address extension extension 3</annotation>
+<assign value='source.addressExtExtUrl3' property='target.address.(1).extension.(1).extension.(3).url' action='set' />
+<assign value='source.addressExtExtvalueCode3' property='target.address.(1).extension.(1).extension.(3).valueCode' action='set' />
+</group>
+<group>
+<annotation>address extension extension 4</annotation>
+<assign value='source.addressExtExtUrl4' property='target.address.(1).extension.(1).extension.(4).url' action='set' />
+<assign value='source.addressExtExtvalueCode4' property='target.address.(1).extension.(1).extension.(4).valueCode' action='set' />
+</group>
+</transform>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="production.bo.Satusehat">
+<Super>HS.FHIRServer.Interop.HTTPOperation</Super>
+<TimeChanged>66609,73718.3602518</TimeChanged>
+<TimeCreated>66599,2975.4167331</TimeCreated>
+
+<Parameter name="SETTINGS">
+<Default>SSLConfiguration:Authorization:sslConfigSelector,AccessTokenCredentials:Authorization:credentialsSelector,ResponseFormat:Basic</Default>
+</Parameter>
+
+<Parameter name="ACCESSTOKENURL">
+<Type>%String</Type>
+<Default>https://api-satusehat-dev.dto.kemkes.go.id/oauth2/v1/accesstoken?grant_type=client_credentials</Default>
+</Parameter>
+
+<Property name="CurrentAccessToken">
+<Type>%String</Type>
+<Private>1</Private>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="CurrentExpiry">
+<Type>%TimeStamp</Type>
+<Private>1</Private>
+</Property>
+
+<Property name="TokenType">
+<Type>%TimeStamp</Type>
+<Private>1</Private>
+</Property>
+
+<Property name="ResponseFormat">
+<Type>%String</Type>
+<InitialExpression>"JSON"</InitialExpression>
+<Required>1</Required>
+<Parameter name="VALUELIST" value=",JSON,XML"/>
+</Property>
+
+<Property name="SSLConfiguration">
+<Type>%String</Type>
+</Property>
+
+<Property name="AccessTokenCredentials">
+<Type>%String</Type>
+</Property>
+
+<Parameter name="MAXEXPLEFT">
+<Description>
+Maximum comfortably allowed left-over time on expirey window, before deciding a token is to be refreshed </Description>
+<Type>%Integer</Type>
+<Default>10</Default>
+</Parameter>
+
+<Method name="RefreshToken">
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+
+    quit:..CurrentExpiry="" 1
+
+	// Re-use last (un-expired) token given ?  - refresh if MaxExpiryLeft or less left.
+	if ..CurrentExpiry'="",$System.SQL.Functions.DATEDIFF("ss",$System.SQL.Functions.DATEADD("s",0,$h),..CurrentExpiry)>..#MAXEXPLEFT {
+		; all good. don't force refresh of access token
+        quit 0
+	}
+
+    quit 1
+]]></Implementation>
+</Method>
+
+<Method name="AddAccessToken">
+<FormalSpec>pInteropRequest:HS.FHIRServer.Interop.Request</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+
+    set tSC=$$$OK
+    Try {
+
+        // Else - work it out.
+        if ..RefreshToken() {
+
+            // REQUEST a fresh access token
+            set HTTPrequest=##class(%Net.HttpRequest).%New()
+
+            do ##class(%Net.URLParser).Decompose(..#ACCESSTOKENURL,.arrOAuth)
+            set HTTPrequest.Server=arrOAuth("host")
+            set HTTPrequest.Port=$get(arrOAuth("port") ,443)
+            set HTTPrequest.InitiateAuthentication=""
+            set HTTPrequest.Https=1
+            set HTTPrequest.SSLConfiguration=..SSLConfiguration
+
+
+            set ClientCreds=##class(Ens.Config.Credentials).%OpenId(..AccessTokenCredentials)            
+            do HTTPrequest.SetHeader("Accept","*/*")
+            do HTTPrequest.InsertFormData("client_id",ClientCreds.Username)
+            do HTTPrequest.InsertFormData("client_secret",ClientCreds.Password)             
+             
+            set tSC=HTTPrequest.Post(arrOAuth("path")_"?"_arrOAuth("query")) 
+            quit:$$$ISERR(tSC)
+            
+            set jr={}.%FromJSON(HTTPrequest.HttpResponse.Data) 
+            ;; Check HTTP status, or, returned error in response
+            if HTTPrequest.HttpResponse.StatusCode'=200 {
+                Set tSC=$$$ERROR($$$EnsErrGeneral,"(HTTP Status "_HTTPrequest.HttpResponse.StatusCode_"): "_jr.issue.%Get(0).details.text)
+                quit
+            } 
+             
+            // Instantiate the response object
+            // use JSON Import capabilities to correlate JSON stream to properties. 
+            if jr."access_token"'="" {
+                set ..CurrentExpiry 	    = $System.SQL.Functions.DATEADD("s",jr."expires_in"-1,$h)
+                set ..CurrentAccessToken    = jr."access_token"
+                set ..TokenType 			= jr."token_Type"      
+                
+            } else {
+                set ..CurrentExpiry 	    = ""
+                set ..CurrentAccessToken    = ""
+                set ..TokenType 			= ""      
+            } 
+  
+        }
+
+        set accessToken =..CurrentAccessToken
+        set pInteropRequest.Request.ResponseFormatCode=..ResponseFormat
+        do pInteropRequest.Request.AdditionalInfo.SetAt("OAuthSendType","header")
+        do pInteropRequest.Request.AdditionalInfo.SetAt(accessToken,"USER:OAuthToken")
+
+    } catch ex {
+            set tSC=ex.AsStatus()
+    }
+
+    Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="DispatchRequest">
+<FormalSpec>pInteropRequest:HS.FHIRServer.Interop.Request,*pInteropResponse:HS.FHIRServer.Interop.Response</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    // Add Authorisation token to interop request
+    set tSC=..AddAccessToken(pInteropRequest) quit:'tSC tSC
+    
+	quit ##super(pInteropRequest,.pInteropResponse)
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Document name="EnsExportNotes.EnsExportProduction_2023-05-17 16-05-39_934+8.PTD"><ProjectTextDocument name="EnsExportNotes.EnsExportProduction_2023-05-17 16-05-39_934+8" description="Export Notes for export EnsExportProduction_2023-05-17 16-05-39_934+8">
+<![CDATA[<Deployment>
+<Creation>
+<Machine>HK7400KLAU.ISCINTERNAL.COM</Machine>
+<Instance>IRISHEALTH</Instance>
+<Namespace>SATUSEHAT</Namespace>
+<SourceProduction>SATUSEHATPKG.FoundationProduction</SourceProduction>
+<Username>SuperUser</Username>
+<UTC>2023-05-17 08:05:50.110</UTC>
+</Creation>
+<Notes>
+</Notes>
+<Contents>
+<ExportProject>EnsExportProduction_2023-05-17 16-05-39_934+8</ExportProject>
+<Item num="1">OrganizationRM.CLS</Item>
+<Item num="2">SATUSEHATPKG.FoundationProduction.CLS</Item>
+<Item num="3">User.OrganizationRM.CLS</Item>
+<Item num="4">User.OrganizationRM.Record.CLS</Item>
+<Item num="5">fhir.bp.csvToFhirOrganization.CLS</Item>
+<Item num="6">fhir.dtl.csvToFhirR4Organization.CLS</Item>
+<Item num="7">production.bo.Satusehat.CLS</Item>
+</Contents>
+<ProductionClassInExport>SATUSEHATPKG.FoundationProduction</ProductionClassInExport>
+</Deployment>
+
+]]></ProjectTextDocument>
+</Document></Export>
