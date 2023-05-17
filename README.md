@@ -16,3 +16,10 @@ A sample production is added, in this production, we have -Kate @ISC (*17 May 20
 1- BS for intake a csv file "sampleOrganizationData"<br>
 2- BP for transfrom the csv into fhie bundle<br>
 3- Bo for sending things to SATUSEHAT development environment<br>
+
+A sample production_v1 is added, in this production, we have -Kate @ISC (*18 May 2023*)<br>
+1- BS for intake a csv file "sampleOrganizationDatav1"<br>
+   *add the Method, id fields to the csv file<br>
+   *add POST, GET, and PUT method for the Orgainztion resource<br>
+2- BP for transfrom the csv into fhie bundle<br>
+3- Bo for sending things to SATUSEHAT development environment<br>
