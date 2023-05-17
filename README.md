@@ -12,3 +12,7 @@ Transactions to implement with BitHealth (*12 May 2023*):
 2-Location  
 3-Practitioner  
 
+A sample production is added, in this production, we have -Kate @ISC (*17 May 2023*)
+1- BS for intake a csv file "sampleOrganizationData"
+2- BP for transfrom the csv into fhie bundle
+3- Bo for sending things to SATUSEHAT development environment
