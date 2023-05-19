@@ -6,6 +6,9 @@ Link to documentation:
 https://satusehat-kemkes-go-id.translate.goog/platform/docs/id/playbook/?_x_tr_sl=id&_x_tr_tl=en&_x_tr_hl=en  
 https://www.postman.com/satusehat/workspace/satusehat-public/overview  
 
+This tool can be used to generate OpenAPI spec from POSTMAN collection (exported as JSON):
+https://kevinswiber.github.io/postman2openapi/
+
 Transactions to implement with BitHealth (*12 May 2023*):
 
 1-Registration of organization: one time upload and more to be added when growing  
