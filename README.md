@@ -26,3 +26,13 @@ A sample production_v1 is added, in this production, we have -Kate @ISC (*18 May
    *add POST, GET, and PUT method for the Orgainztion resource<br>
 2- BP for transfrom the csv into fhie bundle<br>
 3- Bo for sending things to SATUSEHAT development environment<br>
+
+A sample production_v2 is added, in this production, we have -Kate @ISC (*26 May 2023*)<br>
+--Organization-GET POST PUT<br>
+--Location-GET POST PUT<br>
+--Practitioner-GET<br>
+--Patient-GET<br>
+--Encounter-(still working on it)<br>
+Sample data .csv is uploaded<br>
+lookup table is added<br>
+
