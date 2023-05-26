@@ -1,0 +1,4 @@
+﻿GET;N10000010;Practitioner;https://fhir.kemkes.go.id/id/nik;367000000000000;Voigt;male;1945
+GET;;Practitioner;https://fhir.kemkes.go.id/id/nik;367000000000000;;;
+GET;;Practitioner;;;Voigt;male;1945
+GET;;Practitioner;https://fhir.kemkes.go.id/id/nik;367400001111202;Voigt;;

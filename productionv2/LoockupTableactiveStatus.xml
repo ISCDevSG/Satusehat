@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2023.1 (Build 229U)" ts="2023-05-26 12:27:16">
+<Document name="activeStatus.LUT">
+<lookupTable>
+<entry table="activeStatus" key="F">0</entry>
+<entry table="activeStatus" key="FALSE">0</entry>
+<entry table="activeStatus" key="False">0</entry>
+<entry table="activeStatus" key="T">1</entry>
+<entry table="activeStatus" key="TRUE">1</entry>
+<entry table="activeStatus" key="True">1</entry>
+</lookupTable>
+</Document></Export>

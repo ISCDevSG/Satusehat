@@ -1,0 +1,6 @@
+﻿PUT;b36c3d2d-842c-40be-a377-af0e991382e6;Location;;http://sys-ids.kemkes.go.id/location/1000001;G-2-R-1A;active;Ruang 1A IRJT;Ruang 1A, Poliklinik Bedah Rawat Jalan Terpadu, Lantai 2, Gedung G;instance;phone;2328;work;fax;2329;work;email;www.rs-satusehat@gmail.com;work;url;http://sampleorg.com/southwing;work;work;Gd. Prof. Dr. Sujudi Lt.5, Jl. H.R. Rasuna Said Blok X5 Kav. 4-9 Kuningan;Jakarta;12950;ID;https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode;province;10;city;1010;district;1010101;village;1010101101;rt;1;rw;2;http://terminology.hl7.org/CodeSystem/location-physical-type;ro;room;-6.231154263;106.8323989;0;Organization/10000004
+GET;b36c3d2d-842c-40be-a377-af0e991382e6;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+GET;dc01c797-547a-4e4d-97cd-4ece0630e380;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+GET;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Organization/54278fdf-57f9-4e6f-aca4-be97ac12a3f7
+GET;;;;;;;Ruang IT Erasys Consulting;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+GET;;;;http://sys-ids.kemkes.go.id/location/1000001;G-2-R-1A;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

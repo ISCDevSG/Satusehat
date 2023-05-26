@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2023.1 (Build 229U)" ts="2023-05-26 12:52:18">
+<Class name="SATUSEHATPKG.FoundationProduction">
+<ProcedureBlock>0</ProcedureBlock>
+<Super>Ens.Production</Super>
+<TimeChanged>66620,44440.4964479</TimeChanged>
+<TimeCreated>66609,73023.6479655</TimeCreated>
+
+<XData name="ProductionDefinition">
+<Data><![CDATA[
+<Production Name="SATUSEHATPKG.FoundationProduction" TestingEnabled="true" LogGeneralTraceEvents="false">
+  <Description></Description>
+  <ActorPoolSize>1</ActorPoolSize>
+  <Item Name="ToSatusehat" Category="" ClassName="production.bo.Satusehat" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Host" Name="AccessTokenCredentials">AccessTokenCredentials</Setting>
+    <Setting Target="Host" Name="SSLConfiguration">DefaultSSL</Setting>
+    <Setting Target="Host" Name="ServiceName">satusehat</Setting>
+    <Setting Target="Host" Name="TraceOperations">*FULL*</Setting>
+  </Item>
+  <Item Name="HS.Util.Trace.Operations" Category="" ClassName="HS.Util.Trace.Operations" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+  <Item Name="FileInputOrganization" Category="" ClassName="EnsLib.RecordMap.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="ArchivePath">C:\DemoFileInOut\csv\Archive\</Setting>
+    <Setting Target="Adapter" Name="CallInterval">5000</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\DemoFileInOut\csv\In\</Setting>
+    <Setting Target="Host" Name="TargetConfigNames">csvToFhirOrganization</Setting>
+    <Setting Target="Host" Name="RecordMap">OrganizationRM</Setting>
+    <Setting Target="Adapter" Name="FileSpec">*Organization*</Setting>
+  </Item>
+  <Item Name="FileInputLocation" Category="" ClassName="EnsLib.RecordMap.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="ArchivePath">C:\DemoFileInOut\csv\Archive\</Setting>
+    <Setting Target="Adapter" Name="CallInterval">5000</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\DemoFileInOut\csv\In\</Setting>
+    <Setting Target="Host" Name="TargetConfigNames">csvToFhirLocation</Setting>
+    <Setting Target="Host" Name="RecordMap">LocationRM</Setting>
+    <Setting Target="Adapter" Name="FileSpec">*Location*</Setting>
+  </Item>
+  <Item Name="FileInputPatient" Category="" ClassName="EnsLib.RecordMap.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="ArchivePath">C:\DemoFileInOut\csv\Archive\</Setting>
+    <Setting Target="Adapter" Name="CallInterval">5000</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\DemoFileInOut\csv\In\</Setting>
+    <Setting Target="Host" Name="TargetConfigNames">csvToFhirPatient</Setting>
+    <Setting Target="Host" Name="RecordMap">PatientRM</Setting>
+    <Setting Target="Adapter" Name="FileSpec">*Patient*</Setting>
+  </Item>
+  <Item Name="FileInputEncounter" Category="" ClassName="EnsLib.RecordMap.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="ArchivePath">C:\DemoFileInOut\csv\Archive\</Setting>
+    <Setting Target="Adapter" Name="CallInterval">5000</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\DemoFileInOut\csv\In\</Setting>
+    <Setting Target="Host" Name="TargetConfigNames">csvToFhirEncounter</Setting>
+    <Setting Target="Host" Name="RecordMap">EncounterRM</Setting>
+    <Setting Target="Adapter" Name="FileSpec">*Encounter*</Setting>
+  </Item>
+  <Item Name="FileInputPractitioner" Category="" ClassName="EnsLib.RecordMap.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="ArchivePath">C:\DemoFileInOut\csv\Archive\</Setting>
+    <Setting Target="Adapter" Name="CallInterval">5000</Setting>
+    <Setting Target="Adapter" Name="FilePath">C:\DemoFileInOut\csv\In\</Setting>
+    <Setting Target="Host" Name="TargetConfigNames">csvToFhirPractitioner</Setting>
+    <Setting Target="Host" Name="RecordMap">PractitionerGETRM</Setting>
+    <Setting Target="Adapter" Name="FileSpec">*Practitioner*</Setting>
+  </Item>
+  <Item Name="csvToFhirOrganization" Category="" ClassName="fhir.bp.csvToFhirOrganization" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
+  </Item>
+  <Item Name="csvToFhirLocation" Category="" ClassName="fhir.bp.csvToFhirLocation" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+  <Item Name="csvToFhirPatient" Category="" ClassName="fhir.bp.csvToFhirPatient" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+  <Item Name="csvToFhirEncounter" Category="" ClassName="fhir.bp.csvToFhirEncounter" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+  <Item Name="csvToFhirPractitioner" Category="" ClassName="fhir.bp.csvToFhirPractitioner" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+</Production>
+]]></Data>
+</XData>
+</Class>
+
+
+</Export>

@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2023.1 (Build 229U)" ts="2023-05-26 12:52:12">
+<Class name="production.bo.Satusehat">
+<Super>HS.FHIRServer.Interop.HTTPOperation</Super>
+<TimeChanged>66609,73718.3602518</TimeChanged>
+<TimeCreated>66599,2975.4167331</TimeCreated>
+
+<Parameter name="SETTINGS">
+<Default>SSLConfiguration:Authorization:sslConfigSelector,AccessTokenCredentials:Authorization:credentialsSelector,ResponseFormat:Basic</Default>
+</Parameter>
+
+<Parameter name="ACCESSTOKENURL">
+<Type>%String</Type>
+<Default>https://api-satusehat-dev.dto.kemkes.go.id/oauth2/v1/accesstoken?grant_type=client_credentials</Default>
+</Parameter>
+
+<Property name="CurrentAccessToken">
+<Type>%String</Type>
+<Private>1</Private>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="CurrentExpiry">
+<Type>%TimeStamp</Type>
+<Private>1</Private>
+</Property>
+
+<Property name="TokenType">
+<Type>%TimeStamp</Type>
+<Private>1</Private>
+</Property>
+
+<Property name="ResponseFormat">
+<Type>%String</Type>
+<InitialExpression>"JSON"</InitialExpression>
+<Required>1</Required>
+<Parameter name="VALUELIST" value=",JSON,XML"/>
+</Property>
+
+<Property name="SSLConfiguration">
+<Type>%String</Type>
+</Property>
+
+<Property name="AccessTokenCredentials">
+<Type>%String</Type>
+</Property>
+
+<Parameter name="MAXEXPLEFT">
+<Description>
+Maximum comfortably allowed left-over time on expirey window, before deciding a token is to be refreshed </Description>
+<Type>%Integer</Type>
+<Default>10</Default>
+</Parameter>
+
+<Method name="RefreshToken">
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+
+    quit:..CurrentExpiry="" 1
+
+	// Re-use last (un-expired) token given ?  - refresh if MaxExpiryLeft or less left.
+	if ..CurrentExpiry'="",$System.SQL.Functions.DATEDIFF("ss",$System.SQL.Functions.DATEADD("s",0,$h),..CurrentExpiry)>..#MAXEXPLEFT {
+		; all good. don't force refresh of access token
+        quit 0
+	}
+
+    quit 1
+]]></Implementation>
+</Method>
+
+<Method name="AddAccessToken">
+<FormalSpec>pInteropRequest:HS.FHIRServer.Interop.Request</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+
+    set tSC=$$$OK
+    Try {
+
+        // Else - work it out.
+        if ..RefreshToken() {
+
+            // REQUEST a fresh access token
+            set HTTPrequest=##class(%Net.HttpRequest).%New()
+
+            do ##class(%Net.URLParser).Decompose(..#ACCESSTOKENURL,.arrOAuth)
+            set HTTPrequest.Server=arrOAuth("host")
+            set HTTPrequest.Port=$get(arrOAuth("port") ,443)
+            set HTTPrequest.InitiateAuthentication=""
+            set HTTPrequest.Https=1
+            set HTTPrequest.SSLConfiguration=..SSLConfiguration
+
+
+            set ClientCreds=##class(Ens.Config.Credentials).%OpenId(..AccessTokenCredentials)            
+            do HTTPrequest.SetHeader("Accept","*/*")
+            do HTTPrequest.InsertFormData("client_id",ClientCreds.Username)
+            do HTTPrequest.InsertFormData("client_secret",ClientCreds.Password)             
+             
+            set tSC=HTTPrequest.Post(arrOAuth("path")_"?"_arrOAuth("query")) 
+            quit:$$$ISERR(tSC)
+            
+            set jr={}.%FromJSON(HTTPrequest.HttpResponse.Data) 
+            ;; Check HTTP status, or, returned error in response
+            if HTTPrequest.HttpResponse.StatusCode'=200 {
+                Set tSC=$$$ERROR($$$EnsErrGeneral,"(HTTP Status "_HTTPrequest.HttpResponse.StatusCode_"): "_jr.issue.%Get(0).details.text)
+                quit
+            } 
+             
+            // Instantiate the response object
+            // use JSON Import capabilities to correlate JSON stream to properties. 
+            if jr."access_token"'="" {
+                set ..CurrentExpiry 	    = $System.SQL.Functions.DATEADD("s",jr."expires_in"-1,$h)
+                set ..CurrentAccessToken    = jr."access_token"
+                set ..TokenType 			= jr."token_Type"      
+                
+            } else {
+                set ..CurrentExpiry 	    = ""
+                set ..CurrentAccessToken    = ""
+                set ..TokenType 			= ""      
+            } 
+  
+        }
+
+        set accessToken =..CurrentAccessToken
+        set pInteropRequest.Request.ResponseFormatCode=..ResponseFormat
+        do pInteropRequest.Request.AdditionalInfo.SetAt("OAuthSendType","header")
+        do pInteropRequest.Request.AdditionalInfo.SetAt(accessToken,"USER:OAuthToken")
+
+    } catch ex {
+            set tSC=ex.AsStatus()
+    }
+
+    Quit tSC
+]]></Implementation>
+</Method>
+
+<Method name="DispatchRequest">
+<FormalSpec>pInteropRequest:HS.FHIRServer.Interop.Request,*pInteropResponse:HS.FHIRServer.Interop.Response</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    // Add Authorisation token to interop request
+    set tSC=..AddAccessToken(pInteropRequest) quit:'tSC tSC
+    
+	quit ##super(pInteropRequest,.pInteropResponse)
+]]></Implementation>
+</Method>
+</Class>
+
+
+
+
+<Class name="production.utli.utli">
+<Super>%RegisteredObject</Super>
+<TimeChanged>66620,44231.934053</TimeChanged>
+<TimeCreated>66618,79862.462493</TimeCreated>
+
+<Method name="AddQueryString">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Rid:%String="",idSystemNik:%String="",idValueNik:%String="",name:%String="",gender:%String="",birthdate:%String=""</FormalSpec>
+<Language>objectscript</Language>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	s returnStr=""
+	if (Rid="")
+	{
+		if (name'="")
+		{
+			s returnStr="&name="_name
+		}
+		if (birthdate'="")
+		{
+			s returnStr=returnStr_"&birthdate="_birthdate
+		}
+		if (gender'="")
+		{
+			s returnStr=returnStr_"&gender="_gender
+		}
+		if (idValueNik'="")
+		{
+			s returnStr=returnStr_"&identifier="_idSystemNik_"|"_idValueNik
+		}
+		s returnStr=$extract(returnStr,2,*)
+	}
+	return returnStr
+]]></Implementation>
+</Method>
+
+<Method name="AddPathString">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Rid:%String="",resource</FormalSpec>
+<Language>objectscript</Language>
+<Implementation><![CDATA[
+	s returnStr=resource
+	if (Rid'="")
+	{
+		s returnStr=returnStr_"/"_Rid
+	}
+	return returnStr
+]]></Implementation>
+</Method>
+
+<Method name="WriteQuickStream">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Sid:%String=""</FormalSpec>
+<Language>objectscript</Language>
+<Implementation><![CDATA[
+	s returnStr=0
+	if (Sid'="")
+	{
+		s qstream=##class(HS.SDA3.QuickStream).%OpenId(Sid)
+		if ($d(qstream)=1)
+		{
+			s returnStr=qstream.Read(3000000)
+			k qstream
+		}
+	}
+	return returnStr
+]]></Implementation>
+</Method>
+
+<Method name="updateGetPatientResult">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Str1=""</FormalSpec>
+<Language>python</Language>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	import json
+	import iris
+	
+	try:
+		# Convert from JSON to Python
+		z = json.loads(Str1)
+		if 'resourceType' in z.keys():
+			#print(z["resourceType"])
+			if z["resourceType"]=="Bundle":
+				if 'entry' in z.keys():
+					print(len(z["entry"]))
+					if len(z["entry"])==0:
+						return 'No entry items'
+					for i in range(len(z["entry"])):
+						zData=z["entry"][i]
+						if 'resource' in zData.keys():
+							resData=z["entry"][i]["resource"]
+							#Convert from Python to JSON
+							resStrJson=json.dumps(resData)
+							#print(resStrJson)
+				
+							rid=""
+							nik=""
+							motherNik=""
+				
+							for j in range(len(resData["identifier"])):
+								if resData["identifier"][j]["system"]=="https://fhir.kemkes.go.id/id/nik":
+									nik=resData["identifier"][j]["value"]
+								if resData["identifier"][j]["system"]=="https://fhir.kemkes.go.id/id/nik-ibu":
+									motherNik=resData["identifier"][j]["value"]
+							if 'id' in resData.keys():
+								rid=resData["id"]
+								
+							#print('nik:'+nik+' motherNik: '+motherNik+' || '+resStrJson)
+							rowid=iris.cls('fhir.db.resource.Patient').writeResource(rid,resStrJson,nik,motherNik)
+						else:
+							return 'No resource'
+				else:
+					return 'No entry'
+			if z["resourceType"]=="Patient":
+				#return 'Practitioner'
+				resData=z
+				#Convert from Python to JSON
+				resStrJson=json.dumps(resData)
+				#print(resStrJson)
+				rid=""
+				nik=""
+				motherNik=""
+			
+				for j in range(len(resData["identifier"])):
+					if resData["identifier"][j]["system"]=="https://fhir.kemkes.go.id/id/nik":
+						nik=resData["identifier"][j]["value"]
+					if resData["identifier"][j]["system"]=="https://fhir.kemkes.go.id/id/nik-ibu":
+						motherNik=resData["identifier"][j]["value"]
+				if 'id' in resData.keys():
+					rid=resData["id"]
+					
+				#print('nik:'+nik+' motherNik: '+motherNik+' || '+resStrJson)
+				rowid=iris.cls('fhir.db.resource.Practitioner').writeResource(rid,resStrJson,nik,name,gender,birthdate)
+		else:
+			return 'No resourceType'
+		return 'Done'
+	except:
+		return 'error'
+]]></Implementation>
+</Method>
+
+<Method name="updateGetPractitionerResult">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Str1=""</FormalSpec>
+<Language>python</Language>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	import json
+	import iris
+	
+	try:
+		# Convert from JSON to Python
+		z = json.loads(Str1)
+		if 'resourceType' in z.keys():
+			#print(z["resourceType"])
+			if z["resourceType"]=="Bundle":
+				if 'entry' in z.keys():
+					print(len(z["entry"]))
+					if len(z["entry"])==0:
+						return 'No entry items'
+					for i in range(len(z["entry"])):
+						zData=z["entry"][i]
+						if 'resource' in zData.keys():
+							resData=z["entry"][i]["resource"]
+							#Convert from Python to JSON
+							resStrJson=json.dumps(resData)
+							#print(resStrJson)
+				
+							rid=""
+							nik=""
+							name=""
+							gender=""
+							birthdate=""
+				
+							for j in range(len(resData["identifier"])):
+								if resData["identifier"][j]["system"]=="https://fhir.kemkes.go.id/id/nik":
+									nik=resData["identifier"][j]["value"]
+							if 'id' in resData.keys():
+								rid=resData["id"]
+							if 'name' in resData.keys():		
+								name=resData["name"][0]["text"]
+							if 'gender' in resData.keys():
+								gender=resData["gender"]
+							if 'birthDate' in resData.keys():
+								birthdate=resData["birthDate"]
+				
+							#print('nik:'+nik+' name: '+name+' gender: '+gender+' birthdate: '+birthdate+' || '+resStrJson)
+							rowid=iris.cls('fhir.db.resource.Practitioner').writeResource(rid,resStrJson,nik,name,gender,birthdate)
+						else:
+							return 'No resource'
+				else:
+					return 'No entry'
+			if z["resourceType"]=="Practitioner":
+				#return 'Practitioner'
+				resData=z
+				#Convert from Python to JSON
+				resStrJson=json.dumps(resData)
+				#print(resStrJson)
+				rid=""
+				nik=""
+				name=""
+				gender=""
+				birthdate=""
+			
+				for j in range(len(resData["identifier"])):
+					if resData["identifier"][j]["system"]=="https://fhir.kemkes.go.id/id/nik":
+						nik=resData["identifier"][j]["value"]
+				if 'id' in resData.keys():
+					rid=resData["id"]
+				if 'name' in resData.keys():		
+					name=resData["name"][0]["text"]
+				if 'gender' in resData.keys():
+					gender=resData["gender"]
+				if 'birthDate' in resData.keys():
+					birthdate=resData["birthDate"]
+				#print('nik:'+nik+' name: '+name+' gender: '+gender+' birthdate: '+birthdate+' || '+resStrJson)
+				rowid=iris.cls('fhir.db.resource.Practitioner').writeResource(rid,resStrJson,nik,name,gender,birthdate)
+		else:
+			return 'No resourceType'
+	
+		return 'Done'
+	except:
+		return 'error'
+]]></Implementation>
+</Method>
+
+<Method name="updateGetOrganizationResult">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Str1=""</FormalSpec>
+<Language>python</Language>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	import json
+	import iris
+	
+	try:
+		# Convert from JSON to Python
+		z = json.loads(Str1)
+		if 'resourceType' in z.keys():
+			#print(z["resourceType"])
+			if z["resourceType"]=="Bundle":
+				if 'entry' in z.keys():
+					print(len(z["entry"]))
+					if len(z["entry"])==0:
+						return 'No entry items'
+					for i in range(len(z["entry"])):
+						zData=z["entry"][i]
+						if 'resource' in zData.keys():
+							resData=z["entry"][i]["resource"]
+							#Convert from Python to JSON
+							resStrJson=json.dumps(resData)
+							#print(resStrJson)
+							
+							rid=""
+							name=""
+							partOf=""
+							
+							if 'id' in resData.keys():
+								rid=resData["id"]
+							if 'name' in resData.keys():		
+								name=resData["name"]
+							
+							if 'partOf' in resData.keys():
+								if 'reference' in resData["partOf"].keys():
+									partOf=resData["partOf"]["reference"]
+								
+							#print('name:'+name+' part of: '+partOf+' || '+resStrJson)
+							rowid=iris.cls('fhir.db.resource.Organization').writeResource(rid,resStrJson,name,partOf)
+						else:
+							return 'No resource'
+				else:
+					return 'No entry'
+			if z["resourceType"]=="Organization":
+				#return 'Organization'
+				resData=z
+				#Convert from Python to JSON
+				resStrJson=json.dumps(resData)
+				#print(resStrJson)
+				rid=""
+				name=""
+				partOf=""
+				
+				if 'id' in resData.keys():
+					rid=resData["id"]
+				if 'name' in resData.keys():		
+					name=resData["name"]
+				if 'partOf' in resData.keys():
+					if 'reference' in resData["partOf"].keys():
+						partOf=resData["partOf"]["reference"]
+								
+				#print('name:'+name+' part of: '+partOf+' || '+resStrJson)
+				rowid=iris.cls('fhir.db.resource.Organization').writeResource(rid,resStrJson,name,partOf)
+		else:
+			return 'No resourceType'
+		return 'Done'
+	except:
+		return 'error'
+]]></Implementation>
+</Method>
+
+<Method name="updateGetLocationResult">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Str1=""</FormalSpec>
+<Language>python</Language>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	import json
+	import iris
+	
+	try:
+		# Convert from JSON to Python
+		z = json.loads(Str1)
+		if 'resourceType' in z.keys():
+			#print(z["resourceType"])
+			if z["resourceType"]=="Bundle":
+				if 'entry' in z.keys():
+					print(len(z["entry"]))
+					if len(z["entry"])==0:
+						return 'No entry items'
+					for i in range(len(z["entry"])):
+						zData=z["entry"][i]
+						if 'resource' in zData.keys():
+							resData=z["entry"][i]["resource"]
+							#Convert from Python to JSON
+							resStrJson=json.dumps(resData)
+							#print(resStrJson)
+							
+							rid=""
+							identifierSystem=""
+							identifierValue=""
+							name=""
+							organization=""
+							
+							if 'id' in resData.keys():
+								rid=resData["id"]
+							for j in range(len(resData["identifier"])):
+								identifierSystem=resData["identifier"][j]["system"]
+								identifierValue=resData["identifier"][j]["value"]
+							if 'name' in resData.keys():		
+								name=resData["name"]
+							
+							if 'managingOrganization' in resData.keys():
+								if 'reference' in resData["managingOrganization"].keys():
+									organization=resData["managingOrganization"]["reference"]
+								
+							#print('identifier:'+identifierSystem+'|'+identifierValue+' name:'+name+' organization: '+organization+' || '+resStrJson)
+							rowid=iris.cls('fhir.db.resource.Location').writeResource(rid,resStrJson,identifierSystem,identifierValue,name,organization)
+						else:
+							return 'No resource'
+				else:
+					return 'No entry'
+			if z["resourceType"]=="Location":
+				#return 'Location'
+				resData=z
+				#Convert from Python to JSON
+				resStrJson=json.dumps(resData)
+				#print(resStrJson)
+				rid=""
+				identifierSystem=""
+				identifierValue=""
+				name=""
+				organization=""
+				
+				if 'id' in resData.keys():
+					rid=resData["id"]
+				for j in range(len(resData["identifier"])):
+					identifierSystem=resData["identifier"][j]["system"]
+					identifierValue=resData["identifier"][j]["value"]
+				if 'name' in resData.keys():		
+					name=resData["name"]
+				
+				if 'managingOrganization' in resData.keys():
+					if 'reference' in resData["managingOrganization"].keys():
+						organization=resData["managingOrganization"]["reference"]
+					
+				#print('identifier:'+identifierSystem+'|'+identifierValue+' name:'+name+' organization: '+organization+' || '+resStrJson)
+				rowid=iris.cls('fhir.db.resource.Location').writeResource(rid,resStrJson,identifierSystem,identifierValue,name,organization)
+		else:
+			return 'No resourceType'
+		return 'Done'
+	except:
+		return 'error'
+]]></Implementation>
+</Method>
+</Class>
+</Export>

@@ -1,0 +1,2 @@
+PUT;2101fbb5-b0c2-4f7e-a449-cfece54e2621;Encounter;;arrived;http://terminology.hl7.org/CodeSystem/v3-ActCode;AMB;ambulatory;Patient/100000030009;BudiÿSantoso;http://terminology.hl7.org/CodeSystem/v3-ParticipationType;ATND;attender;Practitioner/N10000001;DokterÿBronsig;2022-06-14T07:00:00+07:00;;Location/b017aa54-f1df-4ec2-9d84-8823815d7228;Ruangÿ1A,ÿPoliklinikÿBedahÿRawatÿJalanÿTerpadu,ÿLantaiÿ2,ÿGedungÿG;arrived;2022-06-14T07:00:00+07:00;;http://sys-ids.kemkes.go.id/encounter/10000004;P20240001
+GET;2101fbb5-b0c2-4f7e-a449-cfece54e2621
