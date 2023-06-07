@@ -6,6 +6,8 @@ Link to documentation:
 https://satusehat-kemkes-go-id.translate.goog/platform/docs/id/playbook/?_x_tr_sl=id&_x_tr_tl=en&_x_tr_hl=en  
 https://www.postman.com/satusehat/workspace/satusehat-public/overview  
 
+ISC internal link to TrakCare data fields https://usconfluence.iscinternal.com/display/THE/Satu+Sehat+%28One+Health%29+-+Guidelines+for+Variables+and+Meta+Data+in+EMR+Implementation
+
 This tool can be used to generate OpenAPI spec from POSTMAN collection (exported as JSON):
 https://kevinswiber.github.io/postman2openapi/
 
