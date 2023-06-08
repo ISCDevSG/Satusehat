@@ -38,3 +38,11 @@ A sample production_v2 is added, in this production, we have -Kate @ISC (*26 May
 Sample data .csv is uploaded<br>
 lookup table is added<br>
 
+__Questions__:
+- how can codesets be downloaded
+- what is the expected medication coding process (hospitals send using codes from DTO web site? or can POST their own)
+- how to handle Encounter (keep internal state or passthrough anything that is sent from EMR)
+- what data to be persisted in the FHIR repository
+-   inbound 
+-   received
+on a per-transaction basis.
