@@ -46,3 +46,6 @@ __Questions__:
 -   inbound 
 -   received
 on a per-transaction basis.
+- how to trigger budnles (_TBD_)
+- how to handle errors: 40x and 20x with text (consent) (_TBD_)
+- how to handle consent
