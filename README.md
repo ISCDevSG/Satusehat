@@ -46,6 +46,7 @@ __Questions__:
 -   inbound 
 -   received
 on a per-transaction basis.
-- how to trigger budnles (_TBD_)
+- Bundles can be ignored for now and will have to be handled one at a time, if triggered by a hospital system
+- most use cases are defined on a per resource basis, with just a few bundle use cases
 - how to handle errors: 40x and 20x with text (consent) (_TBD_)
 - how to handle consent
