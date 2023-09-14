@@ -1,6 +1,9 @@
 # Satusehat
 ISC Dev SG Satusehat
 
+OP Playbook: https://github.com/ISCDevSG/Satusehat/blob/main/Playbook%20Resume%20Medis%20Rawat%20Jalan%235%20v5.0c.pdf
+UPDATE 14/09: see SATUSEHATpriorities doc for 2023 readiness requirement.
+
 Link to documentation:  
 [ISC Internal: https://intersystemscorporation-my.sharepoint.com/personal/kalau_intersystems_com/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fkalau%5Fintersystems%5Fcom%2FDocuments%2FDocuments%2FGeneralMaterials%2FProject%2FSATUSEHAT&ga=1]   
 https://satusehat-kemkes-go-id.translate.goog/platform/docs/id/playbook/?_x_tr_sl=id&_x_tr_tl=en&_x_tr_hl=en  
@@ -48,5 +51,5 @@ __Questions__:
 on a per-transaction basis.
 - Bundles can be ignored for now and will have to be handled one at a time, if triggered by a hospital system
 - most use cases are defined on a per resource basis, with just a few bundle use cases
-- how to handle errors: 40x and 20x with text (consent) (_TBD_)
-- how to handle consent
+- how to handle errors: 40x and 20x with text (consent) done.
+- how to handle consent: confirmed and changed.
